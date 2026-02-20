@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { View, StyleSheet, Platform, Alert } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
   Home,
@@ -20,6 +20,7 @@ import * as Haptics from 'expo-haptics';
 import { COLORS, TAB_BAR_HEIGHT, SPACING } from '@/constants';
 import type { TabParamList } from './types';
 import { FAB } from '@/components/ui/FAB';
+import { QuickActionSheet, type QuickAction } from '@/components/ui/QuickActionSheet';
 
 // Screens
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
@@ -37,13 +38,19 @@ function AddPlaceholder() {
 
 export function TabNavigator() {
   const insets = useSafeAreaInsets();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const handleFABPress = () => {
-    // Will be replaced by QuickActionSheet in Phase 6
-    Alert.alert('Quick Add', 'Transaction modal coming in Phase 6');
+    setSheetOpen(true);
+  };
+
+  const handleQuickAction = (action: QuickAction) => {
+    // Will open TransactionModal with pre-selected type in Phase 6
+    console.log('Quick action:', action);
   };
 
   return (
+    <>
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
@@ -146,5 +153,11 @@ export function TabNavigator() {
         }}
       />
     </Tab.Navigator>
+    <QuickActionSheet
+      visible={sheetOpen}
+      onClose={() => setSheetOpen(false)}
+      onAction={handleQuickAction}
+    />
+    </>
   );
 }
