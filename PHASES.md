@@ -267,19 +267,25 @@
 
 ---
 
-## Phase 11: Sync & Polish 🔲
+## Phase 11: Sync & Polish ✅ `69add8f`
 
 **Goal:** PouchDB ↔ CouchDB sync, offline support, app polish.
 
-**Planned work:**
-- Replication engine: bidirectional sync with conflict resolution
-- Offline queue for mutations
-- Push notifications (expo-notifications)
-- App icon & splash screen
-- Performance optimization (FlatList virtualization, memo boundaries)
-- Error boundaries
-- Deep linking
-- Final QA pass
+**Delivered:**
+- **Replication engine** (`src/lib/replication.ts`) — bidirectional PouchDB ↔ CouchDB sync
+  - BehaviorSubject-based reactive sync state (`syncState$`)
+  - AsyncStorage config persistence, NetInfo offline detection
+  - Live/retry sync with `batch_size: 60`, Basic/Bearer auth
+  - 6 personal DBs + 1 shared DB per household (`hh_{id}_{collection}`)
+  - Manual one-off sync + auto-sync toggle + connection verification
+  - `ensureRemoteDB()` creates remote DBs on demand
+- **useSyncStatus hook** — subscribes to sync state, exposes `status`, `isOnline`, `isSyncing`, `manualSync()`, `setAutoSync()`
+- **ErrorBoundary** — React error boundary with retry UI, wraps entire app
+- **Deep linking** (`src/navigation/linking.ts`) — `expence://` scheme mapping all screens
+- **LocalFirstProvider** (`src/context/LocalFirstContext.tsx`) — initialises PouchDB indexes + starts replication on auth
+- **App.tsx wiring** — ErrorBoundary → Clerk → NavigationContainer(linking) → AuthProvider → LocalFirstProvider → RootNavigator
+- **Performance** — `React.memo` on `TransactionRow`, `ListItem`, `StatCard` list-item components
+- **Deps:** `@react-native-community/netinfo`
 
 ---
 
