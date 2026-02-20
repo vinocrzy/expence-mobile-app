@@ -14,13 +14,13 @@
 | 4 | Navigation Shell | ✅ Complete | `5f46fba` | 16 | +1,015 |
 | 5 | Design System | ✅ Complete | `047e304` | 31 | +3,423 |
 | 6 | Core Screens | ✅ Complete | `5b2558e` | 9 | +1,744 |
-| 7 | Guest Mode (No-Auth) | 🔲 Not Started | — | — | — |
+| 7 | Guest Mode (No-Auth) | ✅ Complete | `0ef254f` | 8 | +638 |
 | 8 | Financial Features | 🔲 Not Started | — | — | — |
 | 9 | Analytics & Charts | 🔲 Not Started | — | — | — |
 | 10 | Settings & Household | 🔲 Not Started | — | — | — |
 | 11 | Sync & Polish | 🔲 Not Started | — | — | — |
 
-**Total so far:** 113 files, ~13,100 lines
+**Total so far:** 115 files, ~13,800 lines
 
 ---
 
@@ -154,45 +154,50 @@
 
 ---
 
-## Phase 7: Guest Mode (No-Auth) 🔲
+## Phase 7: Guest Mode (No-Auth) ✅
 
-**Goal:** Allow users to use the app without signing in — fully local, no sync.
+**Commit:** `0ef254f`
 
-Currently the app requires Clerk authentication before showing any screens. This phase adds a **"Continue as Guest"** pathway so users can explore and use the app immediately with all data stored locally. Sync is disabled until they sign in.
+**What was built:**
+- **WelcomeScreen** (`src/screens/auth/WelcomeScreen.tsx`) — branded onboarding entry point
+  - Hero gradient header with app logo
+  - Three feature highlights (track expenses, data on device, sync later)
+  - "Sign In" gradient button → Clerk auth flow
+  - "Continue as Guest" outline button → local-only mode
+  - Haptic feedback on both actions
+- **AuthContext guest mode** (`src/context/AuthContext.tsx`) — extended with:
+  - `isGuest: boolean` flag, `enterGuestMode()`, `exitGuestMode()`
+  - Guest ID generated via `uuid` and persisted in AsyncStorage
+  - PouchDB services hydrated with guest identifiers (all CRUD works identically)
+  - Clerk sync skipped when in guest mode
+- **RootNavigator 3-way branch** (`src/navigation/RootNavigator.tsx`):
+  - `!isLoaded && !isGuest` → loading spinner
+  - `isGuest || isSignedIn` → main app stack
+  - `else` → AuthNavigator (Welcome → SignIn/SignUp)
+- **AuthNavigator updated** (`src/navigation/AuthNavigator.tsx`):
+  - Initial mode changed from `'signin'` to `'welcome'`
+  - Welcome → SignIn / SignUp / Guest three-way flow
+- **SyncStatusPill** (`src/components/ui/SyncStatusPill.tsx`) — added `LOCAL_ONLY` state
+  - Smartphone icon, purple accent, "Local Only" label
+- **MoreScreen** (`src/screens/settings/MoreScreen.tsx`) — guest-aware:
+  - Guest: generic "G" avatar, "Guest" name, "Sign in to enable sync" subtitle
+  - Household section hidden for guest users
+  - "Sign Out" replaced with "Sign In" button (with data preservation alert)
+- **useGuestMigration hook** (`src/hooks/useGuestMigration.ts`) — scaffolded:
+  - Detects previous guest session after sign-in
+  - Prompts: "Keep Data" (merge) or "Start Fresh" (discard)
+  - Placeholder for bulk PouchDB doc re-tagging (Phase 10+)
 
-**Planned work:**
-- **Welcome / Onboarding screen** — new entry point with two paths:
-  - "Sign In" → existing Clerk auth flow
-  - "Continue as Guest" → skip auth, go straight to main app
-- **GuestAuthContext / isGuest flag** — extend `AuthContext` with a `isGuest: boolean` state
-  - When guest: generate a local-only `guestUserId` + `guestHouseholdId` (persisted in AsyncStorage)
-  - Hydrate PouchDB services (`setHouseholdId`, `setCurrentUser`) with guest identifiers
-  - All CRUD operations work identically — data lives in PouchDB memory/local adapter
-- **RootNavigator update** — three-way branch:
-  - `isLoading` → splash
-  - `isGuest` → main app stack (no sync)
-  - `isSignedIn` → main app stack (with sync)
-  - `else` → Welcome screen (sign in / guest choice)
-- **Sync gating** — disable replication engine entirely for guest users
-  - `useReplication` hook checks `isGuest` and no-ops
-  - SyncStatusPill shows "Local Only" badge for guests
-- **Guest-to-account migration** — when a guest later signs in:
-  - Prompt: "You have local data. Merge with your account?"
-  - If yes: re-tag all local docs with the real `householdId` and trigger first sync
-  - If no: wipe local guest data, start fresh from server
-- **Profile / Settings awareness** — show "Sign in to enable sync" banner in Profile and Settings when in guest mode
-- **MoreScreen update** — replace "Sign Out" with "Sign In" button for guests
-
-**Key files to create/modify:**
-| File | Action |
-|------|--------|
-| `src/screens/auth/WelcomeScreen.tsx` | New — onboarding with two CTAs |
-| `src/context/AuthContext.tsx` | Modify — add `isGuest`, guest user generation |
-| `src/navigation/RootNavigator.tsx` | Modify — three-way routing |
-| `src/navigation/AuthNavigator.tsx` | Modify — add Welcome as initial route |
-| `src/hooks/useGuestMigration.ts` | New — merge guest data on sign-in |
-| `src/components/ui/SyncStatusPill.tsx` | Modify — "Local Only" variant |
-| `src/screens/settings/MoreScreen.tsx` | Modify — conditional sign-in/sign-out |
+**Key files:**
+| File | Action | Lines |
+|------|--------|-------|
+| `src/screens/auth/WelcomeScreen.tsx` | New | +231 |
+| `src/context/AuthContext.tsx` | Modified | +73 (161→234) |
+| `src/navigation/RootNavigator.tsx` | Modified | +6 (98→104) |
+| `src/navigation/AuthNavigator.tsx` | Modified | +15 (18→33) |
+| `src/hooks/useGuestMigration.ts` | New | +145 |
+| `src/components/ui/SyncStatusPill.tsx` | Modified | +7 (130→137) |
+| `src/screens/settings/MoreScreen.tsx` | Modified | +60 (380→440) |
 
 ---
 

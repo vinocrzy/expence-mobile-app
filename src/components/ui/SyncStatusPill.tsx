@@ -21,12 +21,13 @@ import {
   WifiOff,
   Pause,
   CheckCircle,
+  Smartphone,
 } from 'lucide-react-native';
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, ICON_SIZE } from '@/constants';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type SyncState = 'SYNCING' | 'ERROR' | 'OFFLINE' | 'DISABLED' | 'COMPLETED';
+export type SyncState = 'SYNCING' | 'ERROR' | 'OFFLINE' | 'DISABLED' | 'COMPLETED' | 'LOCAL_ONLY';
 
 interface SyncStatusPillProps {
   status: SyncState;
@@ -69,6 +70,12 @@ const STATUS_CONFIG: Record<
     color: COLORS.success,
     bg: 'rgba(34,197,94,0.1)',
     defaultLabel: 'Synced',
+  },
+  LOCAL_ONLY: {
+    icon: <Smartphone size={ICON_SIZE.sm} color={COLORS.primaryLight} />,
+    color: COLORS.primaryLight,
+    bg: 'rgba(139,92,246,0.1)',
+    defaultLabel: 'Local Only',
   },
 };
 

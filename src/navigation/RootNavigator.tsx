@@ -1,13 +1,16 @@
 /**
  * Root Navigator
- * Shows AuthNavigator when signed out, main app stack when signed in.
- * All detail/modal screens are registered here.
+ * Three-way branch:
+ *   1. Loading → splash spinner
+ *   2. Guest OR Clerk signed-in → main app stack
+ *   3. Neither → AuthNavigator (Welcome → SignIn/SignUp)
  */
 
 import React from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useAuth } from '@clerk/clerk-expo';
+import { useAuth as useClerkAuthHook } from '@clerk/clerk-expo';
+import { useAuth } from '@/context/AuthContext';
 
 import { COLORS } from '@/constants';
 import type { RootStackParamList } from './types';
@@ -41,13 +44,16 @@ function LoadingScreen() {
 }
 
 export function RootNavigator() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { isSignedIn, isLoaded } = useClerkAuthHook();
+  const { isGuest } = useAuth();
 
-  if (!isLoaded) {
+  // Still loading Clerk and not in guest mode → show spinner
+  if (!isLoaded && !isGuest) {
     return <LoadingScreen />;
   }
 
-  if (!isSignedIn) {
+  // Not authenticated and not a guest → auth flow
+  if (!isSignedIn && !isGuest) {
     return <AuthNavigator />;
   }
 

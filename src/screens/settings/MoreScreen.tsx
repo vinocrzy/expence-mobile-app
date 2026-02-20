@@ -11,7 +11,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-expo';
+import { useAuth } from '@/context/AuthContext';
 import * as Haptics from 'expo-haptics';
 import {
   BarChart3,
@@ -23,6 +24,7 @@ import {
   Wallet,
   Tag,
   LogOut,
+  LogIn,
   LayoutDashboard,
   Repeat,
 } from 'lucide-react-native';
@@ -54,8 +56,8 @@ interface MenuSection {
   items: MenuItem[];
 }
 
-function buildSections(onSignOut: () => void): MenuSection[] {
-  return [
+function buildSections(onSignOut: () => void, isGuest: boolean, onSignIn: () => void): MenuSection[] {
+  const sections: MenuSection[] = [
     {
       title: 'Insights & Reports',
       items: [
@@ -90,7 +92,11 @@ function buildSections(onSignOut: () => void): MenuSection[] {
         },
       ],
     },
-    {
+  ];
+
+  // Household section only for signed-in users
+  if (!isGuest) {
+    sections.push({
       title: 'Household',
       items: [
         {
@@ -106,42 +112,60 @@ function buildSections(onSignOut: () => void): MenuSection[] {
           screen: 'Household',
         },
       ],
-    },
-    {
-      title: 'Management',
-      items: [
-        {
-          label: 'Manage Categories',
-          subtitle: 'Customize categories',
-          icon: <Tag size={ICON_SIZE.md} color={COLORS.info} />,
-          screen: 'SettingsCategories',
-        },
-      ],
-    },
-    {
-      title: 'Account',
-      items: [
-        {
-          label: 'Profile',
-          subtitle: 'Your account details',
-          icon: <User size={ICON_SIZE.md} color={COLORS.textSecondary} />,
-          screen: 'Profile',
-        },
-        {
-          label: 'Settings',
-          subtitle: 'Preferences & data',
-          icon: <Settings size={ICON_SIZE.md} color={COLORS.textSecondary} />,
-          screen: 'Settings',
-        },
-        {
-          label: 'Sign Out',
-          icon: <LogOut size={ICON_SIZE.md} color={COLORS.error} />,
-          onPress: onSignOut,
-          destructive: true,
-        },
-      ],
-    },
-  ];
+    });
+  }
+
+  sections.push({
+    title: 'Management',
+    items: [
+      {
+        label: 'Manage Categories',
+        subtitle: 'Customize categories',
+        icon: <Tag size={ICON_SIZE.md} color={COLORS.info} />,
+        screen: 'SettingsCategories',
+      },
+    ],
+  });
+
+  const accountItems: MenuItem[] = [];
+
+  if (!isGuest) {
+    accountItems.push(
+      {
+        label: 'Profile',
+        subtitle: 'Your account details',
+        icon: <User size={ICON_SIZE.md} color={COLORS.textSecondary} />,
+        screen: 'Profile',
+      },
+    );
+  }
+
+  accountItems.push({
+    label: 'Settings',
+    subtitle: 'Preferences & data',
+    icon: <Settings size={ICON_SIZE.md} color={COLORS.textSecondary} />,
+    screen: 'Settings',
+  });
+
+  if (isGuest) {
+    accountItems.push({
+      label: 'Sign In',
+      subtitle: 'Enable sync & backup',
+      icon: <LogIn size={ICON_SIZE.md} color={COLORS.primary} />,
+      onPress: onSignIn,
+    });
+  } else {
+    accountItems.push({
+      label: 'Sign Out',
+      icon: <LogOut size={ICON_SIZE.md} color={COLORS.error} />,
+      onPress: onSignOut,
+      destructive: true,
+    });
+  }
+
+  sections.push({ title: 'Account', items: accountItems });
+
+  return sections;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -149,8 +173,9 @@ function buildSections(onSignOut: () => void): MenuSection[] {
 export function MoreScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
-  const { signOut } = useAuth();
-  const { user } = useUser();
+  const { signOut } = useClerkAuth();
+  const { user: clerkUser } = useUser();
+  const { isGuest, exitGuestMode } = useAuth();
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
@@ -163,7 +188,21 @@ export function MoreScreen() {
     ]);
   };
 
-  const sections = buildSections(handleSignOut);
+  const handleSignIn = () => {
+    Alert.alert(
+      'Sign In',
+      'Your local data will be preserved. You can merge it after signing in.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Continue',
+          onPress: () => exitGuestMode(),
+        },
+      ],
+    );
+  };
+
+  const sections = buildSections(handleSignOut, isGuest, handleSignIn);
 
   const handleItemPress = (item: MenuItem) => {
     Haptics.selectionAsync();
@@ -174,11 +213,15 @@ export function MoreScreen() {
     }
   };
 
-  // Avatar — Clerk image or initials
-  const avatarUri = user?.imageUrl;
-  const displayName =
-    user?.firstName ?? user?.emailAddresses?.[0]?.emailAddress ?? 'User';
+  // Avatar — Clerk image, guest fallback, or initials
+  const avatarUri = isGuest ? undefined : clerkUser?.imageUrl;
+  const displayName = isGuest
+    ? 'Guest'
+    : (clerkUser?.firstName ?? clerkUser?.emailAddresses?.[0]?.emailAddress ?? 'User');
   const initials = displayName.charAt(0).toUpperCase();
+  const subtitleText = isGuest
+    ? 'Sign in to enable sync & backup'
+    : (clerkUser?.emailAddresses?.[0]?.emailAddress ?? '');
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -201,7 +244,7 @@ export function MoreScreen() {
               {displayName}
             </Text>
             <Text style={styles.userEmail} numberOfLines={1}>
-              {user?.emailAddresses?.[0]?.emailAddress ?? ''}
+              {subtitleText}
             </Text>
           </View>
         </View>

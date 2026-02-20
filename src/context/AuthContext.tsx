@@ -1,14 +1,18 @@
 /**
  * Auth Context — mirrors the web AuthContext but uses @clerk/clerk-expo.
  *
- * Provides: user, loading, logout, refreshUser, getToken
+ * Provides: user, loading, logout, refreshUser, getToken, guest-mode helpers
  * The ClerkProvider itself is in App.tsx; this context adds the mapped User shape
  * and bridges Clerk state into the rest of the app (services, household, etc.).
+ *
+ * Guest Mode: users may skip sign-in and use the app fully offline/local.
+ * When a guest later signs in, useGuestMigration handles data transition.
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { useUser, useClerk, useAuth as useClerkAuth } from '@clerk/clerk-expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { v4 as uuidv4 } from 'uuid';
 import { setHouseholdId, setCurrentUser } from '@/lib/localdb-services';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -27,13 +31,21 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  /** true when the user chose "Continue as Guest" */
+  isGuest: boolean;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   getToken: (options?: any) => Promise<string | null>;
+  /** Enter local-only guest mode (no auth required) */
+  enterGuestMode: () => Promise<void>;
+  /** Exit guest mode (e.g. user decides to sign in) */
+  exitGuestMode: () => Promise<void>;
 }
 
 const CACHE_KEY = 'pocket_user_cache';
 const USER_COLOR_KEY = 'pocket_user_color';
+const GUEST_MODE_KEY = 'pocket_guest_mode';
+const GUEST_ID_KEY = 'pocket_guest_id';
 
 // ─── Random member color (matches web behaviour) ────────────────────────────
 
@@ -55,11 +67,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
 
-  // 1. Restore from cache on mount (instant splash → content)
+  // ─── 1. Restore from cache / guest flag on mount ─────────────────────────
   useEffect(() => {
     (async () => {
       try {
+        // Check guest mode first
+        const guestFlag = await AsyncStorage.getItem(GUEST_MODE_KEY);
+        if (guestFlag === 'true') {
+          const guestId = await AsyncStorage.getItem(GUEST_ID_KEY) || `guest_${uuidv4()}`;
+          const guestUser: User = {
+            id: guestId,
+            email: '',
+            name: 'Guest',
+            firstName: 'Guest',
+            householdId: guestId,
+            color: '#A78BFA',
+          };
+          setUser(guestUser);
+          setIsGuest(true);
+          setHouseholdId(guestId);
+          setCurrentUser({ id: guestId, name: 'Guest', color: '#A78BFA' });
+          setLoading(false);
+          return;
+        }
+
+        // Otherwise, try Clerk cache
         const cached = await AsyncStorage.getItem(CACHE_KEY);
         if (cached) {
           const parsed: User = JSON.parse(cached);
@@ -75,9 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // 2. Sync with Clerk once loaded
+  // 2. Sync with Clerk once loaded (skip if guest)
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || isGuest) return;
 
     (async () => {
       if (clerkUser) {
@@ -114,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       setLoading(false);
     })();
-  }, [isLoaded, clerkUser]);
+  }, [isLoaded, clerkUser, isGuest]);
 
   // ─── Actions ─────────────────────────────────────────────────────────────
 
@@ -134,14 +168,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await clerkUser?.reload();
   };
 
+  const enterGuestMode = useCallback(async () => {
+    try {
+      const guestId = `guest_${uuidv4()}`;
+      await AsyncStorage.setItem(GUEST_MODE_KEY, 'true');
+      await AsyncStorage.setItem(GUEST_ID_KEY, guestId);
+
+      const guestUser: User = {
+        id: guestId,
+        email: '',
+        name: 'Guest',
+        firstName: 'Guest',
+        householdId: guestId,
+        color: '#A78BFA',
+      };
+
+      setUser(guestUser);
+      setIsGuest(true);
+      setHouseholdId(guestId);
+      setCurrentUser({ id: guestId, name: 'Guest', color: '#A78BFA' });
+    } catch (error) {
+      console.error('[Auth] enterGuestMode failed', error);
+    }
+  }, []);
+
+  const exitGuestMode = useCallback(async () => {
+    try {
+      await AsyncStorage.multiRemove([GUEST_MODE_KEY, GUEST_ID_KEY]);
+      setIsGuest(false);
+      setUser(null);
+      setHouseholdId(null);
+      setCurrentUser(null);
+    } catch (error) {
+      console.error('[Auth] exitGuestMode failed', error);
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
         user,
         loading: loading && !user, // cached user = not loading
+        isGuest,
         logout,
         refreshUser,
         getToken,
+        enterGuestMode,
+        exitGuestMode,
       }}
     >
       {children}
