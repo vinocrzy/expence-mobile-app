@@ -14,10 +14,11 @@
 | 4 | Navigation Shell | ✅ Complete | `5f46fba` | 16 | +1,015 |
 | 5 | Design System | ✅ Complete | `047e304` | 31 | +3,423 |
 | 6 | Core Screens | ✅ Complete | `5b2558e` | 9 | +1,744 |
-| 7 | Financial Features | 🔲 Not Started | — | — | — |
-| 8 | Analytics & Charts | 🔲 Not Started | — | — | — |
-| 9 | Settings & Household | 🔲 Not Started | — | — | — |
-| 10 | Sync & Polish | 🔲 Not Started | — | — | — |
+| 7 | Guest Mode (No-Auth) | 🔲 Not Started | — | — | — |
+| 8 | Financial Features | 🔲 Not Started | — | — | — |
+| 9 | Analytics & Charts | 🔲 Not Started | — | — | — |
+| 10 | Settings & Household | 🔲 Not Started | — | — | — |
+| 11 | Sync & Polish | 🔲 Not Started | — | — | — |
 
 **Total so far:** 113 files, ~13,100 lines
 
@@ -153,7 +154,49 @@
 
 ---
 
-## Phase 7: Financial Features 🔲
+## Phase 7: Guest Mode (No-Auth) 🔲
+
+**Goal:** Allow users to use the app without signing in — fully local, no sync.
+
+Currently the app requires Clerk authentication before showing any screens. This phase adds a **"Continue as Guest"** pathway so users can explore and use the app immediately with all data stored locally. Sync is disabled until they sign in.
+
+**Planned work:**
+- **Welcome / Onboarding screen** — new entry point with two paths:
+  - "Sign In" → existing Clerk auth flow
+  - "Continue as Guest" → skip auth, go straight to main app
+- **GuestAuthContext / isGuest flag** — extend `AuthContext` with a `isGuest: boolean` state
+  - When guest: generate a local-only `guestUserId` + `guestHouseholdId` (persisted in AsyncStorage)
+  - Hydrate PouchDB services (`setHouseholdId`, `setCurrentUser`) with guest identifiers
+  - All CRUD operations work identically — data lives in PouchDB memory/local adapter
+- **RootNavigator update** — three-way branch:
+  - `isLoading` → splash
+  - `isGuest` → main app stack (no sync)
+  - `isSignedIn` → main app stack (with sync)
+  - `else` → Welcome screen (sign in / guest choice)
+- **Sync gating** — disable replication engine entirely for guest users
+  - `useReplication` hook checks `isGuest` and no-ops
+  - SyncStatusPill shows "Local Only" badge for guests
+- **Guest-to-account migration** — when a guest later signs in:
+  - Prompt: "You have local data. Merge with your account?"
+  - If yes: re-tag all local docs with the real `householdId` and trigger first sync
+  - If no: wipe local guest data, start fresh from server
+- **Profile / Settings awareness** — show "Sign in to enable sync" banner in Profile and Settings when in guest mode
+- **MoreScreen update** — replace "Sign Out" with "Sign In" button for guests
+
+**Key files to create/modify:**
+| File | Action |
+|------|--------|
+| `src/screens/auth/WelcomeScreen.tsx` | New — onboarding with two CTAs |
+| `src/context/AuthContext.tsx` | Modify — add `isGuest`, guest user generation |
+| `src/navigation/RootNavigator.tsx` | Modify — three-way routing |
+| `src/navigation/AuthNavigator.tsx` | Modify — add Welcome as initial route |
+| `src/hooks/useGuestMigration.ts` | New — merge guest data on sign-in |
+| `src/components/ui/SyncStatusPill.tsx` | Modify — "Local Only" variant |
+| `src/screens/settings/MoreScreen.tsx` | Modify — conditional sign-in/sign-out |
+
+---
+
+## Phase 8: Financial Features 🔲
 
 **Goal:** Detail screens for accounts, credit cards, loans, and budget planning.
 
@@ -167,7 +210,7 @@
 
 ---
 
-## Phase 8: Analytics & Charts 🔲
+## Phase 9: Analytics & Charts 🔲
 
 **Goal:** Charts and visualizations for spending insights.
 
@@ -179,7 +222,7 @@
 
 ---
 
-## Phase 9: Settings & Household 🔲
+## Phase 10: Settings & Household 🔲
 
 **Goal:** Settings, category management, household sharing.
 
@@ -192,7 +235,7 @@
 
 ---
 
-## Phase 10: Sync & Polish 🔲
+## Phase 11: Sync & Polish 🔲
 
 **Goal:** PouchDB ↔ CouchDB sync, offline support, app polish.
 
