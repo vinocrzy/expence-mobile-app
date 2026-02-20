@@ -74,7 +74,7 @@ const TYPE_CONFIG: Record<
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export function TransactionRow({
+export const TransactionRow = React.memo(function TransactionRow({
   title,
   amount,
   type,
@@ -121,7 +121,7 @@ export function TransactionRow({
       </View>
     </AnimatedPressable>
   );
-}
+});
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -163,3 +163,5 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
 });
+
+TransactionRow.displayName = 'TransactionRow';

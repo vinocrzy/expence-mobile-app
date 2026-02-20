@@ -12,6 +12,9 @@ import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
 import { COLORS } from '@/constants';
 import { RootNavigator } from '@/navigation';
 import { AuthProvider } from '@/context/AuthContext';
+import { LocalFirstProvider } from '@/context/LocalFirstContext';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { linking } from '@/navigation/linking';
 import { tokenCache } from '@/lib/auth';
 
 const CLERK_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
@@ -32,19 +35,23 @@ const DarkNavTheme = {
 
 export default function App() {
   return (
-    <ClerkProvider publishableKey={CLERK_KEY} tokenCache={tokenCache}>
-      <ClerkLoaded>
-        <GestureHandlerRootView style={{ flex: 1, backgroundColor: COLORS.background }}>
-          <SafeAreaProvider>
-            <NavigationContainer theme={DarkNavTheme}>
-              <AuthProvider>
-                <StatusBar style="light" />
-                <RootNavigator />
-              </AuthProvider>
-            </NavigationContainer>
-          </SafeAreaProvider>
-        </GestureHandlerRootView>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <ErrorBoundary>
+      <ClerkProvider publishableKey={CLERK_KEY} tokenCache={tokenCache}>
+        <ClerkLoaded>
+          <GestureHandlerRootView style={{ flex: 1, backgroundColor: COLORS.background }}>
+            <SafeAreaProvider>
+              <NavigationContainer theme={DarkNavTheme} linking={linking}>
+                <AuthProvider>
+                  <LocalFirstProvider>
+                    <StatusBar style="light" />
+                    <RootNavigator />
+                  </LocalFirstProvider>
+                </AuthProvider>
+              </NavigationContainer>
+            </SafeAreaProvider>
+          </GestureHandlerRootView>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </ErrorBoundary>
   );
 }

@@ -22,7 +22,7 @@ interface ListItemProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export function ListItem({
+export const ListItem = React.memo(function ListItem({
   title,
   subtitle,
   leftIcon,
@@ -60,7 +60,7 @@ export function ListItem({
       )}
     </AnimatedPressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -95,3 +95,5 @@ const styles = StyleSheet.create({
     color: COLORS.error,
   },
 });
+
+ListItem.displayName = 'ListItem';

@@ -21,7 +21,7 @@ interface StatCardProps {
   trendColor?: string;
 }
 
-export function StatCard({
+export const StatCard = React.memo(function StatCard({
   label,
   value,
   icon,
@@ -55,7 +55,7 @@ export function StatCard({
       )}
     </GlassCard>
   );
-}
+});
 
 const styles = StyleSheet.create({
   card: {
@@ -92,3 +92,5 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 });
+
+StatCard.displayName = 'StatCard';
