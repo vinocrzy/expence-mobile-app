@@ -4,7 +4,7 @@
  * The center "Add" tab is a dummy screen that triggers the FAB action sheet.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import {
@@ -19,8 +19,11 @@ import * as Haptics from 'expo-haptics';
 
 import { COLORS, TAB_BAR_HEIGHT, SPACING } from '@/constants';
 import type { TabParamList } from './types';
+import type { TransactionType } from '@/types/db-types';
 import { FAB } from '@/components/ui/FAB';
 import { QuickActionSheet, type QuickAction } from '@/components/ui/QuickActionSheet';
+import { TransactionModal } from '@/components/TransactionModal';
+import { useTransactions } from '@/hooks/useLocalData';
 
 // Screens
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
@@ -39,15 +42,26 @@ function AddPlaceholder() {
 export function TabNavigator() {
   const insets = useSafeAreaInsets();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [txModalOpen, setTxModalOpen] = useState(false);
+  const [txInitialType, setTxInitialType] = useState<TransactionType>('EXPENSE');
+  const { addTransaction } = useTransactions();
 
   const handleFABPress = () => {
     setSheetOpen(true);
   };
 
-  const handleQuickAction = (action: QuickAction) => {
-    // Will open TransactionModal with pre-selected type in Phase 6
-    console.log('Quick action:', action);
-  };
+  const handleQuickAction = useCallback((action: QuickAction) => {
+    // Map quick action to transaction type
+    const typeMap: Record<string, TransactionType> = {
+      expense: 'EXPENSE',
+      income: 'INCOME',
+      transfer: 'TRANSFER',
+      investment: 'INVESTMENT',
+      debt: 'DEBT',
+    };
+    setTxInitialType(typeMap[action] || 'EXPENSE');
+    setTxModalOpen(true);
+  }, []);
 
   return (
     <>
@@ -157,6 +171,14 @@ export function TabNavigator() {
       visible={sheetOpen}
       onClose={() => setSheetOpen(false)}
       onAction={handleQuickAction}
+    />
+    <TransactionModal
+      visible={txModalOpen}
+      onClose={() => setTxModalOpen(false)}
+      onSubmit={async (data) => {
+        await addTransaction(data);
+      }}
+      initialType={txInitialType}
     />
     </>
   );
