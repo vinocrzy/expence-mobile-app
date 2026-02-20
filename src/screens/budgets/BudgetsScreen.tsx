@@ -12,6 +12,7 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
+  Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -21,12 +22,14 @@ import {
   Target,
   Flag,
   AlertTriangle,
+  Plus,
 } from 'lucide-react-native';
 
 import { COLORS, FONT_SIZE, SPACING, ICON_SIZE, BORDER_RADIUS } from '@/constants';
 import type { RootStackParamList } from '@/navigation/types';
 import type { Transaction, Budget } from '@/types/db-types';
 import { useBudgets, useTransactions } from '@/hooks/useLocalData';
+import { BudgetCreateModal } from '@/components/BudgetCreateModal';
 import {
   GlassCard,
   Badge,
@@ -76,10 +79,11 @@ function calculateSpent(budget: Budget, transactions: Transaction[]): number {
 export function BudgetsScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
-  const { budgets, loading: budgetsLoading, refresh: refreshBudgets } = useBudgets();
+  const { budgets, loading: budgetsLoading, refresh: refreshBudgets, addBudget } = useBudgets();
   const { transactions, loading: txLoading } = useTransactions();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const loading = budgetsLoading || txLoading;
 
   // Active budgets with spent calculation
@@ -120,6 +124,11 @@ export function BudgetsScreen() {
         showBack={false}
         large
         transparent
+        rightAction={
+          <Pressable onPress={() => setShowCreateModal(true)} hitSlop={8}>
+            <Plus size={24} color={COLORS.primaryLight} />
+          </Pressable>
+        }
       />
 
       {/* Loading */}
@@ -220,6 +229,15 @@ export function BudgetsScreen() {
 
       {/* Bottom spacer */}
       <View style={{ height: 100 }} />
+
+      {/* Create Budget Modal */}
+      <BudgetCreateModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={async (data) => {
+          await addBudget(data);
+        }}
+      />
     </ScrollView>
   );
 }

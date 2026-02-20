@@ -31,6 +31,7 @@ import {
   useCreditCards,
   useLoans,
 } from '@/hooks/useLocalData';
+import { CreditCardModal } from '@/components/CreditCardModal';
 import {
   calculateTotalLiquidCash,
   calculateTotalCreditCardDebt,
@@ -60,10 +61,11 @@ export function FinancesScreen() {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const { accounts, loading: accLoading } = useAccounts();
-  const { creditCards, loading: ccLoading } = useCreditCards();
+  const { creditCards, loading: ccLoading, addCreditCard } = useCreditCards();
   const { loans, loading: loanLoading } = useLoans();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [showCCModal, setShowCCModal] = useState(false);
   const loading = accLoading || ccLoading || loanLoading;
 
   // ── Derived ───────────────────────────────────────────────────────────────
@@ -198,6 +200,8 @@ export function FinancesScreen() {
       {/* ── Credit Cards ── */}
       <SectionHeader
         title="Credit Cards"
+        actionLabel="+ Add Card"
+        onAction={() => setShowCCModal(true)}
         style={{ marginTop: SPACING['2xl'] }}
       />
       {loading ? (
@@ -285,6 +289,15 @@ export function FinancesScreen() {
 
       {/* Bottom spacer */}
       <View style={{ height: 100 }} />
+
+      {/* Add Credit Card Modal */}
+      <CreditCardModal
+        visible={showCCModal}
+        onClose={() => setShowCCModal(false)}
+        onSubmit={async (data) => {
+          await addCreditCard(data);
+        }}
+      />
     </ScrollView>
   );
 }

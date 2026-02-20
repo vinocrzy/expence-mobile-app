@@ -15,6 +15,7 @@ import {
   creditCardService,
   loanService,
   budgetService,
+  recurringService,
   sharedDataService,
   getHouseholdId,
 } from '@/lib/localdb-services';
@@ -31,6 +32,7 @@ import type {
   CreditCard,
   Loan,
   Budget,
+  RecurringTransaction,
 } from '@/types/db-types';
 import { events, EVENTS } from '@/lib/events';
 
@@ -406,5 +408,69 @@ export function useAnalytics(months: number = 12) {
     categoryData,
     loading,
     refresh: loadAnalytics,
+  };
+}
+
+// ============================================
+// RECURRING HOOKS
+// ============================================
+
+export function useRecurring() {
+  const [recurring, setRecurring] = useState<RecurringTransaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadRecurring = useCallback(async () => {
+    try {
+      const householdId = await getHouseholdId();
+      const data = await recurringService.getAllActive(householdId);
+      // Sort by next due date ascending
+      data.sort((a, b) => new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime());
+      setRecurring(data);
+    } catch (error) {
+      console.error('Failed to load recurring:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRecurring();
+    return events.on(EVENTS.RECURRING_CHANGED, loadRecurring);
+  }, [loadRecurring]);
+
+  const addRecurring = useCallback(
+    async (data: Omit<RecurringTransaction, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
+      const item = await recurringService.create(data);
+      events.emit(EVENTS.RECURRING_CHANGED);
+      return item;
+    },
+    [],
+  );
+
+  const updateRecurring = useCallback(async (id: string, data: Partial<RecurringTransaction>) => {
+    await recurringService.update(id, data);
+    events.emit(EVENTS.RECURRING_CHANGED);
+  }, []);
+
+  const deleteRecurring = useCallback(async (id: string) => {
+    await recurringService.delete(id);
+    events.emit(EVENTS.RECURRING_CHANGED);
+  }, []);
+
+  const processPayment = useCallback(async (id: string, accountId: string) => {
+    await recurringService.processPayment(id, accountId);
+    events.emit(EVENTS.RECURRING_CHANGED);
+    events.emit(EVENTS.TRANSACTIONS_CHANGED);
+    events.emit(EVENTS.ACCOUNTS_CHANGED);
+  }, []);
+
+  return {
+    recurring,
+    loading,
+    addRecurring,
+    updateRecurring,
+    deleteRecurring,
+    processPayment,
+    refresh: loadRecurring,
   };
 }
