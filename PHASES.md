@@ -201,17 +201,38 @@
 
 ---
 
-## Phase 8: Financial Features 🔲
+## Phase 8: Financial Features ✅
+
+**Commit:** `b54f0b5` — Phase 8: Financial Features — detail screens + modals
 
 **Goal:** Detail screens for accounts, credit cards, loans, and budget planning.
 
-**Planned work:**
-- AccountDetailScreen — balance history, linked transactions
-- CreditCardDetailScreen — statement, payments, utilization
-- LoanDetailScreen — amortization schedule, prepayment calculator
-- BudgetDetailScreen — category breakdown, spending vs budget
-- BudgetPlanScreen — allocation editor
-- CreditCardPaymentModal, PrepaymentModal, LoanModal, AccountModal, CategoryModal
+### Deliverables
+
+| File | Status | Lines |
+|------|--------|-------|
+| `src/screens/accounts/AccountDetailScreen.tsx` | Replaced | ~290 |
+| `src/screens/credit-cards/CreditCardDetailScreen.tsx` | Replaced | ~340 |
+| `src/screens/loans/LoanDetailScreen.tsx` | Replaced | ~340 |
+| `src/screens/budgets/BudgetDetailScreen.tsx` | Replaced | ~300 |
+| `src/screens/budgets/BudgetPlanScreen.tsx` | Replaced | ~280 |
+| `src/components/AccountModal.tsx` | New | ~165 |
+| `src/components/CreditCardPaymentModal.tsx` | New | ~210 |
+| `src/components/PrepaymentModal.tsx` | New | ~175 |
+| `src/components/LoanModal.tsx` | New | ~290 |
+| `src/components/CategoryModal.tsx` | New | ~255 |
+
+### Key Features
+- **AccountDetailScreen:** Balance hero card, income/expense summary, quick actions (edit/archive/delete), recent transactions list
+- **CreditCardDetailScreen:** Gradient card visual, utilization bar with color thresholds, statement list, pay bill modal
+- **LoanDetailScreen:** EMI calculator with amortization, progress bar, principal vs interest breakdown, prepayment modal
+- **BudgetDetailScreen:** Month navigation for recurring budgets, category breakdown with progress bars, over-budget warnings
+- **BudgetPlanScreen:** Add/remove plan items (name/amount/qty), total vs budget display, activate button
+- **AccountModal:** Name, type (6 types), balance, currency — BottomSheetModal form
+- **CreditCardPaymentModal:** Amount with quick-fill buttons (min/total due), source account, date
+- **PrepaymentModal:** Amount (capped at outstanding), strategy toggle (reduce tenure/EMI), date
+- **LoanModal:** Full CRUD with live EMI preview calculator, linked account, start date, paid EMIs
+- **CategoryModal:** Name, type segments, color picker grid (20 colors), subcategories CRUD
 
 ---
 
