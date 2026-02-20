@@ -252,16 +252,18 @@
 
 ---
 
-## Phase 10: Settings & Household 🔲
+## Phase 10: Settings & Household ✅ `4f73ee1`
 
 **Goal:** Settings, category management, household sharing.
 
-**Planned work:**
-- SettingsScreen — preferences, data management, app info
-- SettingsCategoriesScreen — CRUD for custom categories with icons/colors
-- ProfileScreen — user info, avatar, household membership
-- HouseholdScreen — members, invitations, shared budgets
-- SharedDashboardScreen — household aggregate view
+**Delivered:**
+- **SettingsScreen** — general links (Household, Categories), export/import backup (PouchDB JSON via expo-file-system + sharing), sync status pill, about section
+- **SettingsCategoriesScreen** — 5-segment filter (ALL/EXPENSE/INCOME/INVESTMENT/DEBT), grouped SectionList with color dots, long-press delete, FAB → CategoryModal for create/edit
+- **ProfileScreen** — avatar hero with gradient ring, editable display name, budget cycle toggle (Calendar/Payday), salary day input, sign out
+- **HouseholdScreen** — create household, member list with roles, publish snapshot, copy ID to clipboard, join by code
+- **SharedDashboardScreen** — user filter pills, income/expense overview cards, account balances list, read-only transaction list
+- **useSharedView hook** — fetches shared transactions + balances from sharedDB
+- **Deps:** expo-document-picker, expo-clipboard
 
 ---
 
