@@ -13,13 +13,13 @@
 | 3 | Authentication | ✅ Complete | `5974866` | 12 | +2,820 |
 | 4 | Navigation Shell | ✅ Complete | `5f46fba` | 16 | +1,015 |
 | 5 | Design System | ✅ Complete | `047e304` | 31 | +3,423 |
-| 6 | Core Screens | 🔲 Not Started | — | — | — |
+| 6 | Core Screens | ✅ Complete | `5b2558e` | 9 | +1,744 |
 | 7 | Financial Features | 🔲 Not Started | — | — | — |
 | 8 | Analytics & Charts | 🔲 Not Started | — | — | — |
 | 9 | Settings & Household | 🔲 Not Started | — | — | — |
 | 10 | Sync & Polish | 🔲 Not Started | — | — | — |
 
-**Total so far:** 104 files, ~11,400 lines
+**Total so far:** 113 files, ~13,100 lines
 
 ---
 
@@ -127,6 +127,29 @@
 - **TransactionModal** — Full form: type toggle, amount, title, category/account select, date picker, notes
 - **FinancesScreen** — Accounts list, credit cards summary, loans overview with balances
 - **BudgetsScreen** — Budget cards with progress bars, utilization indicators
+
+---
+
+## Phase 6: Core Screens ✅
+
+**Commit:** `5b2558e`
+
+**What was built:**
+- **DashboardScreen** (347 lines) — hero gradient balance card, horizontal-scroll stat cards (income, expense, savings rate, total debt), assets vs liabilities summary, recent transactions list (latest 8), pull-to-refresh
+- **TransactionsScreen** (259 lines) — search bar with icon, type filter pills (ALL/EXPENSE/INCOME/TRANSFER/INVESTMENT/DEBT), date-grouped SectionList, long-press-to-delete with Alert confirmation, pull-to-refresh, empty state
+- **TransactionModal** (270 lines) — full CRUD bottom-sheet form with 5-type SegmentedControl, AmountInput with currency symbol, description, account/category SelectFields (filtered by type), transfer destination, DateTimePicker. Cancel/Save footer
+- **FinancesScreen** (280 lines) — hero available balance, two-column cash/CC due summary, sectioned lists for bank accounts, credit cards (with outstanding), loans (with principal). Navigation to detail screens
+- **BudgetsScreen** (251 lines) — active budget cards with gradient progress bars, spent calculation from transactions (monthly or event date range), percentage display, over-budget warnings with AlertTriangle icon
+- **TabNavigator wiring** — QuickActionSheet now opens TransactionModal with pre-selected type (expense/income/transfer/investment/debt)
+- **New dependency:** `@react-native-community/datetimepicker`
+- **PHASES.md** tracking document created
+
+**Key patterns:**
+- All screens use `useSafeAreaInsets()` for safe area handling
+- Pull-to-refresh via `RefreshControl` on all list screens
+- Financial formatting: `₹{n}` with Indian locale, K/L abbreviations
+- Data from hooks: `useTransactions`, `useAccounts`, `useCreditCards`, `useLoans`, `useCategories`, `useBudgets`
+- Financial math utils: `calculateAvailableBalance`, `calculateTotalLiquidCash`, etc.
 
 ---
 
