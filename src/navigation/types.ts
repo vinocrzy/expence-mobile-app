@@ -14,8 +14,8 @@ export type AuthStackParamList = {
 export type TabParamList = {
   Dashboard: undefined;
   Transactions: undefined;
+  Add: undefined; // FAB dummy — never navigated to
   Finances: undefined;
-  Budgets: undefined;
   More: undefined;
 };
 
@@ -25,10 +25,12 @@ export type RootStackParamList = {
   AccountDetail: { id: string };
   CreditCardDetail: { id: string };
   LoanDetail: { id: string };
+  Budgets: undefined;
   BudgetDetail: { id: string };
   BudgetPlan: { id: string };
   Analytics: undefined;
   Reports: undefined;
+  Recurring: undefined;
   Settings: undefined;
   SettingsCategories: undefined;
   Profile: undefined;

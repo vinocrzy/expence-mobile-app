@@ -1,6 +1,7 @@
 /**
  * Root Navigator
  * Shows AuthNavigator when signed out, main app stack when signed in.
+ * All detail/modal screens are registered here.
  */
 
 import React from 'react';
@@ -13,10 +14,21 @@ import type { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
 import { AuthNavigator } from './AuthNavigator';
 
-// Detail/Modal screens — placeholders for now
+// ─── Detail / Modal screens ─────────────────────────────────────────────────
 import { AnalyticsScreen } from '@/screens/analytics/AnalyticsScreen';
 import { SettingsScreen } from '@/screens/settings/SettingsScreen';
+import { SettingsCategoriesScreen } from '@/screens/settings/SettingsCategoriesScreen';
 import { ProfileScreen } from '@/screens/profile/ProfileScreen';
+import { ReportsScreen } from '@/screens/reports/ReportsScreen';
+import { RecurringScreen } from '@/screens/recurring/RecurringScreen';
+import { HouseholdScreen } from '@/screens/household/HouseholdScreen';
+import { SharedDashboardScreen } from '@/screens/household/SharedDashboardScreen';
+import { AccountDetailScreen } from '@/screens/accounts/AccountDetailScreen';
+import { CreditCardDetailScreen } from '@/screens/credit-cards/CreditCardDetailScreen';
+import { LoanDetailScreen } from '@/screens/loans/LoanDetailScreen';
+import { BudgetDetailScreen } from '@/screens/budgets/BudgetDetailScreen';
+import { BudgetPlanScreen } from '@/screens/budgets/BudgetPlanScreen';
+import { BudgetsScreen } from '@/screens/budgets/BudgetsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -31,17 +43,14 @@ function LoadingScreen() {
 export function RootNavigator() {
   const { isSignedIn, isLoaded } = useAuth();
 
-  // Clerk still loading — show a spinner
   if (!isLoaded) {
     return <LoadingScreen />;
   }
 
-  // Not signed in — show auth flow
   if (!isSignedIn) {
     return <AuthNavigator />;
   }
 
-  // Signed in — show the main app
   return (
     <Stack.Navigator
       screenOptions={{
@@ -50,9 +59,29 @@ export function RootNavigator() {
         animation: 'slide_from_right',
       }}
     >
+      {/* Main Tabs */}
       <Stack.Screen name="MainTabs" component={TabNavigator} />
+
+      {/* Insights & Reports */}
       <Stack.Screen name="Analytics" component={AnalyticsScreen} />
+      <Stack.Screen name="Reports" component={ReportsScreen} />
+      <Stack.Screen name="Recurring" component={RecurringScreen} />
+
+      {/* Detail screens (push from lists) */}
+      <Stack.Screen name="Budgets" component={BudgetsScreen} />
+      <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
+      <Stack.Screen name="CreditCardDetail" component={CreditCardDetailScreen} />
+      <Stack.Screen name="LoanDetail" component={LoanDetailScreen} />
+      <Stack.Screen name="BudgetDetail" component={BudgetDetailScreen} />
+      <Stack.Screen name="BudgetPlan" component={BudgetPlanScreen} />
+
+      {/* Household */}
+      <Stack.Screen name="Household" component={HouseholdScreen} />
+      <Stack.Screen name="SharedDashboard" component={SharedDashboardScreen} />
+
+      {/* Settings & Profile */}
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="SettingsCategories" component={SettingsCategoriesScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
