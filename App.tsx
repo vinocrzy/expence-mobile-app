@@ -7,9 +7,14 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { ClerkProvider, ClerkLoaded } from '@clerk/clerk-expo';
 
 import { COLORS } from '@/constants';
 import { RootNavigator } from '@/navigation';
+import { AuthProvider } from '@/context/AuthContext';
+import { tokenCache } from '@/lib/auth';
+
+const CLERK_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
 const DarkNavTheme = {
   ...DefaultTheme,
@@ -27,13 +32,19 @@ const DarkNavTheme = {
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: COLORS.background }}>
-      <SafeAreaProvider>
-        <NavigationContainer theme={DarkNavTheme}>
-          <StatusBar style="light" />
-          <RootNavigator />
-        </NavigationContainer>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <ClerkProvider publishableKey={CLERK_KEY} tokenCache={tokenCache}>
+      <ClerkLoaded>
+        <GestureHandlerRootView style={{ flex: 1, backgroundColor: COLORS.background }}>
+          <SafeAreaProvider>
+            <NavigationContainer theme={DarkNavTheme}>
+              <AuthProvider>
+                <StatusBar style="light" />
+                <RootNavigator />
+              </AuthProvider>
+            </NavigationContainer>
+          </SafeAreaProvider>
+        </GestureHandlerRootView>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

@@ -4,6 +4,12 @@
 
 import type { NavigatorScreenParams } from '@react-navigation/native';
 
+// Auth stack (shown when signed out)
+export type AuthStackParamList = {
+  SignIn: undefined;
+  SignUp: undefined;
+};
+
 // Bottom Tab param list
 export type TabParamList = {
   Dashboard: undefined;
@@ -13,7 +19,7 @@ export type TabParamList = {
   More: undefined;
 };
 
-// Stack screens accessible from any tab
+// Stack screens accessible from any tab (shown when signed in)
 export type RootStackParamList = {
   MainTabs: NavigatorScreenParams<TabParamList>;
   AccountDetail: { id: string };
