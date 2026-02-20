@@ -236,15 +236,19 @@
 
 ---
 
-## Phase 9: Analytics & Charts 🔲
+## Phase 9: Analytics & Charts ✅ `290e746`
 
 **Goal:** Charts and visualizations for spending insights.
 
-**Planned work:**
-- AnalyticsScreen — spending by category (pie/donut), monthly trends (bar), savings rate
-- Chart library integration (victory-native or react-native-chart-kit)
-- Date range picker
-- Export functionality hooks
+**Delivered:**
+- **DonutChart** — pure SVG arc rendering via react-native-svg (no external chart lib)
+- **MiniBarChart** — grouped vertical bar chart for income vs expense trends
+- **HorizontalBar** — comparison bars (this month vs last month)
+- **AnalyticsScreen** — range toggle (1M/3M/1Y), 6-stat card grid, bar chart, donut category breakdown
+- **ReportsScreen** — hero card → ReportBuilderModal, quick export cards, template list
+- **ReportBuilderModal** — 9 report types grid, CSV/PDF format toggle, date presets + custom range
+- **useReportExport hook** — CSV via expo-file-system + expo-sharing, PDF via expo-print
+- **Deps:** expo-sharing, expo-file-system, expo-print
 
 ---
 
