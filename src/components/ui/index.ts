@@ -48,6 +48,11 @@ export { QuickActionSheet, type QuickAction } from './QuickActionSheet';
 export { SyncStatusPill, type SyncState } from './SyncStatusPill';
 export { AnimatedAmount } from './AnimatedAmount';
 
+// ─── Charts ──────────────────────────────────────────────────────────────────
+export { DonutChart, type DonutSlice } from './DonutChart';
+export { MiniBarChart, type BarGroup } from './MiniBarChart';
+export { HorizontalBar, type HBarItem } from './HorizontalBar';
+
 // ─── Layout ──────────────────────────────────────────────────────────────────
 export { ScreenHeader } from './ScreenHeader';
 export { FAB } from './FAB';
