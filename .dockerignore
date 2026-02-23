@@ -1,0 +1,35 @@
+# ── Build outputs ─────────────────────────────────────────────────────────────
+node_modules/
+.expo/
+dist/
+web-build/
+android/
+ios/
+*.apk
+*.aab
+*.ipa
+
+# ── Git & CI ──────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.github/
+
+# ── Env files (injected at runtime via docker-compose env_file) ───────────────
+.env
+.env.*
+!.env.example
+
+# ── Editor / OS ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# ── Docker files themselves ───────────────────────────────────────────────────
+Dockerfile*
+docker-compose*.yml
+docker/
+
+# ── Docs & markdown ───────────────────────────────────────────────────────────
+*.md

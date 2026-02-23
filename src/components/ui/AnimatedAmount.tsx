@@ -7,7 +7,6 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { Text, StyleSheet, type TextStyle, type StyleProp } from 'react-native';
-import { useSharedValue, withSpring, runOnJS } from 'react-native-reanimated';
 import { COLORS, FONT_SIZE } from '@/constants';
 
 interface AnimatedAmountProps {
@@ -54,7 +53,6 @@ export function AnimatedAmount({
   style,
 }: AnimatedAmountProps) {
   const [display, setDisplay] = useState(() => formatAmount(value, currency, fractionDigits));
-  const animVal = useSharedValue(value);
 
   const updateDisplay = useCallback(
     (v: number) => {
@@ -64,12 +62,8 @@ export function AnimatedAmount({
   );
 
   useEffect(() => {
-    animVal.value = withSpring(value, SPRING_CONFIG, (finished) => {
-      'worklet';
-      if (finished) runOnJS(updateDisplay)(value);
-    });
-    // Also tick the display via a JS interval for smooth visual updates
-    const start = animVal.value;
+    // Tick the display via a JS interval for smooth visual updates
+    const start = display ? parseFloat(display.replace(/[^0-9.-]/g, '')) || value : value;
     const diff = value - start;
     const steps = 20;
     let step = 0;

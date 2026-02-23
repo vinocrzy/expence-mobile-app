@@ -1,0 +1,203 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Expense Tracker — Docker Compose
+#
+# Services
+# ─────────────────────────────────────────────────────────────────────────────
+#  metro          → Expo Metro bundler / dev server (ports 8081, 19000-19002)
+#  couchdb        → CouchDB 3.x (PouchDB sync backend, port 5984)
+#  couchdb-init   → One-shot: creates the 8 app databases in CouchDB
+#  android-build  → Builds the Android APK/AAB (profile: build)
+#
+# ⚠️  iOS BUILDS ARE NOT SUPPORTED IN DOCKER
+#     Apple requires Xcode which only runs on macOS.
+#     Use EAS Build (https://expo.dev/eas) or a macOS CI runner for iOS.
+#     iOS Expo Go testing → set METRO_HOST to your LAN IP and scan QR.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# ── Expo Go dev workflow (recommended) ───────────────────────────────────────
+#
+#   # Instant start — Metro only, no CouchDB wait
+#   docker compose up metro
+#
+#   # With CouchDB sync enabled
+#   docker compose up metro couchdb couchdb-init
+#
+#   # Tunnel mode (cross-network, any device anywhere)
+#   EXPO_TUNNEL=true docker compose up metro
+#
+# ── Android APK build ────────────────────────────────────────────────────────
+#   docker compose --profile build run --rm android-build
+#   # APK lands in android/app/build/outputs/apk/release/
+#
+# ── Physical device (iOS or Android) ─────────────────────────────────────────
+#   1. Set METRO_HOST=<your-LAN-IP> in .env  (e.g. 192.168.1.50)
+#   2. Set EXPO_PUBLIC_COUCHDB_URL=http://admin:password@<your-LAN-IP>:5984
+#   3. docker compose up metro
+#   4. Open Expo Go → scan QR
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Expo Metro Bundler ────────────────────────────────────────────────────────
+  # Starts immediately — does NOT wait for CouchDB.
+  # When EXPO_PUBLIC_REPLICATION_DISABLED=true (default in .env) the app runs
+  # fully offline-first; CouchDB sync is opt-in.
+  #
+  # ⚡ Source is bind-mounted → hot reload works instantly without rebuilding.
+  #
+  # Tunnel mode (scan QR from any network):
+  #   EXPO_TUNNEL=true docker compose up metro
+  metro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: expense-metro
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      EXPO_PUBLIC_COUCHDB_URL: ${EXPO_PUBLIC_COUCHDB_URL:-http://admin:password@couchdb:5984}
+      EXPO_PUBLIC_REPLICATION_DISABLED: ${EXPO_PUBLIC_REPLICATION_DISABLED:-true}
+      # Metro advertises this IP to Expo Go — set to your host LAN IP for physical devices
+      REACT_NATIVE_PACKAGER_HOSTNAME: ${METRO_HOST:-0.0.0.0}
+      EXPO_NO_TELEMETRY: "1"
+      # Tunnel mode: set EXPO_TUNNEL=true in .env or on the command line
+      EXPO_TUNNEL: ${EXPO_TUNNEL:-false}
+    ports:
+      - "8081:8081"   # Metro bundler (JS bundle)
+      - "19000:19000" # Expo Go classic protocol
+      - "19001:19001" # Expo WS dev tools
+      - "19002:19002" # Expo DevTools UI
+    # Switch between LAN and tunnel mode based on EXPO_TUNNEL env var.
+    # Tunnel mode uses ngrok — no LAN IP config needed, works from any network.
+    command: >
+      sh -c '
+        if [ "$$EXPO_TUNNEL" = "true" ]; then
+          echo "[metro] Starting in TUNNEL mode (Expo Go on any network)..."
+          npx expo start --tunnel --port 8081
+        else
+          echo "[metro] Starting in LAN mode (set METRO_HOST to your LAN IP for physical devices)..."
+          npx expo start --host lan --port 8081
+        fi
+      '
+    volumes:
+      # Bind-mount source for hot-reload
+      - .:/app
+      # Keep node_modules and .expo cache in named volumes so they survive
+      # source edits and are not shadowed by the bind mount
+      - metro_node_modules:/app/node_modules
+      - metro_expo_cache:/app/.expo
+    # Metro starts independently — no CouchDB dependency.
+    # To also start CouchDB: docker compose up metro couchdb couchdb-init
+    networks:
+      - expense-net
+    stdin_open: true   # Keep stdin open for Expo CLI interactive mode
+    tty: true
+
+  # ── CouchDB ──────────────────────────────────────────────────────────────────
+  # PouchDB replication target. Start this when EXPO_PUBLIC_REPLICATION_DISABLED=false.
+  #   docker compose up metro couchdb couchdb-init
+  couchdb:
+    image: couchdb:3.4
+    container_name: expense-couchdb
+    restart: unless-stopped
+    environment:
+      COUCHDB_USER: ${COUCHDB_USER:-admin}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD:-password}
+    ports:
+      - "5984:5984"
+    volumes:
+      - couchdb_data:/opt/couchdb/data
+      - ./docker/couchdb/local.ini:/opt/couchdb/etc/local.ini:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:5984/_up || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - expense-net
+
+  # ── CouchDB initialiser ───────────────────────────────────────────────────────
+  # Runs once after CouchDB is healthy.
+  # Creates single-node cluster + all 8 PouchDB databases.
+  couchdb-init:
+    image: alpine/curl:latest
+    container_name: expense-couchdb-init
+    restart: "no"
+    environment:
+      COUCHDB_USER: ${COUCHDB_USER:-admin}
+      COUCHDB_PASSWORD: ${COUCHDB_PASSWORD:-password}
+    volumes:
+      - ./docker/couchdb/init-db.sh:/init-db.sh:ro
+    command: ["sh", "/init-db.sh"]
+    depends_on:
+      couchdb:
+        condition: service_healthy
+    networks:
+      - expense-net
+
+  # ── Android APK / AAB Builder ─────────────────────────────────────────────────
+  # Produces a release APK (or AAB) via Expo prebuild + Gradle.
+  #
+  # Usage:
+  #   docker compose --profile build run --rm android-build
+  #
+  # To build a DEBUG APK:
+  #   BUILD_TYPE=assembleDebug docker compose --profile build run --rm android-build
+  #
+  # Retrieve the APK from the named volume, or bind-mount an output dir:
+  #   docker run --rm -v expense_android_build_output:/src -v "$(pwd)/output:/dst" \
+  #     alpine sh -c "cp -r /src/. /dst/"
+  android-build:
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+      args:
+        ANDROID_COMPILE_SDK: "35"
+        ANDROID_BUILD_TOOLS: "35.0.0"
+        ANDROID_SDK_TOOLS: "11076708"
+        BUILD_TYPE: ${BUILD_TYPE:-assembleRelease}
+    container_name: expense-android-build
+    env_file:
+      - .env
+    environment:
+      EXPO_PUBLIC_COUCHDB_URL: ${EXPO_PUBLIC_COUCHDB_URL:-http://admin:password@couchdb:5984}
+      EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY: ${EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      EXPO_TOKEN: ${EXPO_TOKEN:-}
+      BUILD_TYPE: ${BUILD_TYPE:-assembleRelease}
+      JAVA_HOME: /opt/java/openjdk
+    volumes:
+      # Gradle cache — persists between builds for faster rebuilds
+      - android_gradle_cache:/root/.gradle
+      # Separate node_modules volume to avoid conflicts with the metro service
+      - android_node_modules:/app/node_modules
+      # Build output (APK / AAB)
+      - android_build_output:/app/android/app/build/outputs
+    networks:
+      - expense-net
+    # This service only starts when --profile build is specified
+    profiles:
+      - build
+
+# ── Named volumes ─────────────────────────────────────────────────────────────
+volumes:
+  couchdb_data:
+    name: expense_couchdb_data
+  metro_node_modules:
+    name: expense_metro_node_modules
+  metro_expo_cache:
+    name: expense_metro_expo_cache
+  android_gradle_cache:
+    name: expense_android_gradle_cache
+  android_node_modules:
+    name: expense_android_node_modules
+  android_build_output:
+    name: expense_android_build_output
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  expense-net:
+    name: expense-network
+    driver: bridge

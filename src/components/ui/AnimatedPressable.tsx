@@ -3,13 +3,8 @@
  * Mirrors the web's `active:scale-95` / framer `whileTap={{ scale: 0.95 }}`.
  */
 
-import React from 'react';
-import { Platform, type ViewStyle, type StyleProp } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import React, { useRef } from 'react';
+import { Platform, type ViewStyle, type StyleProp, Animated } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 
@@ -23,7 +18,7 @@ interface AnimatedPressableProps {
   disabled?: boolean;
 }
 
-const SPRING_CFG = { damping: 15, stiffness: 400, mass: 0.3 };
+const SPRING_CFG = { damping: 15, stiffness: 400, mass: 0.3, useNativeDriver: true };
 
 export function AnimatedPressable({
   children,
@@ -34,24 +29,15 @@ export function AnimatedPressable({
   haptic = false,
   disabled = false,
 }: AnimatedPressableProps) {
-  const scale = useSharedValue(1);
-  const pressed = useSharedValue(false);
+  const scale = useRef(new Animated.Value(1)).current;
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-    opacity: disabled ? 0.5 : 1,
-  }));
+  const animateTo = (toValue: number) =>
+    Animated.spring(scale, { toValue, ...SPRING_CFG }).start();
 
   const tap = Gesture.Tap()
     .enabled(!disabled)
-    .onBegin(() => {
-      scale.value = withSpring(scaleDown, SPRING_CFG);
-      pressed.value = true;
-    })
-    .onFinalize(() => {
-      scale.value = withSpring(1, SPRING_CFG);
-      pressed.value = false;
-    })
+    .onBegin(() => animateTo(scaleDown))
+    .onFinalize(() => animateTo(1))
     .onEnd(() => {
       if (haptic && Platform.OS !== 'web') {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -62,11 +48,9 @@ export function AnimatedPressable({
   const longPress = Gesture.LongPress()
     .enabled(!disabled && !!onLongPress)
     .minDuration(400)
-    .onBegin(() => {
-      scale.value = withSpring(scaleDown, SPRING_CFG);
-    })
+    .onBegin(() => animateTo(scaleDown))
     .onEnd((_e, success) => {
-      scale.value = withSpring(1, SPRING_CFG);
+      animateTo(1);
       if (success) {
         if (haptic && Platform.OS !== 'web') {
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -74,15 +58,20 @@ export function AnimatedPressable({
         if (onLongPress) onLongPress();
       }
     })
-    .onFinalize(() => {
-      scale.value = withSpring(1, SPRING_CFG);
-    });
+    .onFinalize(() => animateTo(1));
 
   const gesture = onLongPress ? Gesture.Race(longPress, tap) : tap;
 
   return (
     <GestureDetector gesture={gesture}>
-      <Animated.View style={[style, animatedStyle]}>{children}</Animated.View>
+      <Animated.View
+        style={[
+          style,
+          { transform: [{ scale }], opacity: disabled ? 0.5 : 1 },
+        ]}
+      >
+        {children}
+      </Animated.View>
     </GestureDetector>
   );
 }

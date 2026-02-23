@@ -14,11 +14,6 @@ import {
   type ViewStyle,
   type StyleProp,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS } from '@/constants';
 
 export interface TextInputFieldProps extends Omit<RNTextInputProps, 'style'> {
@@ -30,7 +25,7 @@ export interface TextInputFieldProps extends Omit<RNTextInputProps, 'style'> {
   containerStyle?: StyleProp<ViewStyle>;
 }
 
-const AnimatedView = Animated.createAnimatedComponent(View);
+const AnimatedView = View;
 
 export function TextInputField({
   label,
@@ -43,25 +38,20 @@ export function TextInputField({
 }: TextInputFieldProps) {
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<RNTextInput>(null);
-  const borderProgress = useSharedValue(0);
 
-  const animatedBorder = useAnimatedStyle(() => ({
-    borderColor: borderProgress.value === 1
-      ? 'rgba(147,51,234,0.5)' // purple-500/50 focus ring
-      : error
-        ? 'rgba(239,68,68,0.5)'
-        : 'rgba(255,255,255,0.1)',
-  }));
+  const borderColor = focused
+    ? 'rgba(147,51,234,0.5)'
+    : error
+      ? 'rgba(239,68,68,0.5)'
+      : 'rgba(255,255,255,0.1)';
 
   const handleFocus = (e: any) => {
     setFocused(true);
-    borderProgress.value = withTiming(1, { duration: 150 });
     rest.onFocus?.(e);
   };
 
   const handleBlur = (e: any) => {
     setFocused(false);
-    borderProgress.value = withTiming(0, { duration: 150 });
     rest.onBlur?.(e);
   };
 
@@ -69,7 +59,7 @@ export function TextInputField({
     <View style={[styles.wrapper, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
 
-      <AnimatedView style={[styles.inputContainer, animatedBorder, error && styles.errorBorder]}>
+      <AnimatedView style={[styles.inputContainer, { borderColor }, error && styles.errorBorder]}>
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
 
         <RNTextInput

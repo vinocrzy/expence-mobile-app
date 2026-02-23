@@ -4,39 +4,26 @@
  * Provides primitive shapes: line, circle, rect.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withSequence,
-  withTiming,
-  Easing,
-} from 'react-native-reanimated';
+import { Animated } from 'react-native';
 import { COLORS, BORDER_RADIUS, SPACING } from '@/constants';
 
 // ─── Pulse wrapper ───────────────────────────────────────────────────────────
 
 function Pulse({ children }: { children: React.ReactNode }) {
-  const opacity = useSharedValue(0.3);
+  const opacity = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 800, easing: Easing.ease }),
-        withTiming(0.3, { duration: 800, easing: Easing.ease }),
-      ),
-      -1,
-      false,
-    );
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+      ]),
+    ).start();
   }, [opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
+  return <Animated.View style={{ opacity }}>{children}</Animated.View>;
 }
 
 // ─── Shape primitives ────────────────────────────────────────────────────────

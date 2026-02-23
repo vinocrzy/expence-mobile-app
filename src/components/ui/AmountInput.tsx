@@ -13,11 +13,6 @@ import {
   type ViewStyle,
   type StyleProp,
 } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS } from '@/constants';
 
 interface AmountInputProps {
@@ -30,8 +25,6 @@ interface AmountInputProps {
   containerStyle?: StyleProp<ViewStyle>;
 }
 
-const AnimatedView = Animated.createAnimatedComponent(View);
-
 export function AmountInput({
   value,
   onChangeText,
@@ -42,23 +35,16 @@ export function AmountInput({
   containerStyle,
 }: AmountInputProps) {
   const inputRef = useRef<RNTextInput>(null);
-  const borderProgress = useSharedValue(0);
+  const [focused, setFocused] = useState(false);
 
-  const animatedBorder = useAnimatedStyle(() => ({
-    borderColor: borderProgress.value === 1
-      ? 'rgba(147,51,234,0.5)'
-      : error
-        ? 'rgba(239,68,68,0.5)'
-        : 'rgba(255,255,255,0.1)',
-  }));
+  const borderColor = focused
+    ? 'rgba(147,51,234,0.5)'
+    : error
+      ? 'rgba(239,68,68,0.5)'
+      : 'rgba(255,255,255,0.1)';
 
-  const handleFocus = () => {
-    borderProgress.value = withTiming(1, { duration: 150 });
-  };
-
-  const handleBlur = () => {
-    borderProgress.value = withTiming(0, { duration: 150 });
-  };
+  const handleFocus = () => setFocused(true);
+  const handleBlur = () => setFocused(false);
 
   const handleChange = useCallback(
     (text: string) => {
@@ -75,7 +61,7 @@ export function AmountInput({
     <View style={[styles.wrapper, containerStyle]}>
       {label && <Text style={styles.label}>{label}</Text>}
 
-      <AnimatedView style={[styles.container, animatedBorder]}>
+      <View style={[styles.container, { borderColor }]}>
         <View style={styles.currencyWrap}>
           <Text style={styles.currency}>{currency}</Text>
         </View>
@@ -91,7 +77,7 @@ export function AmountInput({
           onFocus={handleFocus}
           onBlur={handleBlur}
         />
-      </AnimatedView>
+      </View>
 
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>

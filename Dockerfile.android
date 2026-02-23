@@ -1,0 +1,99 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Expense Tracker — Android APK / AAB Builder
+#
+# Builds the React Native Android project inside a Linux container.
+# The generated APK/AAB is written to:
+#   android/app/build/outputs/apk/   (APK)
+#   android/app/build/outputs/bundle/ (AAB)
+#
+# Usage (via docker-compose):
+#   docker compose --profile build run --rm android-build
+#
+# Or standalone:
+#   docker build -f Dockerfile.android -t expense-android-build .
+#   docker run --rm \
+#     -v "$(pwd)/output:/app/android/app/build/outputs" \
+#     -e EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_... \
+#     expense-android-build
+#
+# ⚠️  iOS NOTE:
+#   iOS builds require Xcode which only runs on macOS.
+#   Docker containers run Linux — iOS builds CANNOT run here.
+#   Use EAS Build (https://expo.dev/eas) or a macOS CI runner for iOS.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Stage 1: Android SDK + Node.js base ──────────────────────────────────────
+FROM eclipse-temurin:17-jdk-jammy AS android-base
+
+ARG NODE_VERSION=22
+# These must match the values in your Expo / React Native project
+ARG ANDROID_COMPILE_SDK=35
+ARG ANDROID_BUILD_TOOLS=35.0.0
+# SDK CLI tools version: https://developer.android.com/studio#command-line-tools-only
+ARG ANDROID_SDK_TOOLS=11076708
+
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH="${PATH}:${ANDROID_HOME}/cmdline-tools/latest/bin:${ANDROID_HOME}/platform-tools:${ANDROID_HOME}/emulator"
+ENV JAVA_HOME=/opt/java/openjdk
+
+# ── System packages ───────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      curl \
+      git \
+      unzip \
+      wget \
+      python3 \
+      make \
+      g++ \
+      libglib2.0-0 \
+  && curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" | bash - \
+  && apt-get install -y --no-install-recommends nodejs \
+  && rm -rf /var/lib/apt/lists/*
+
+# ── Android SDK command-line tools ────────────────────────────────────────────
+RUN mkdir -p "${ANDROID_HOME}/cmdline-tools" \
+  && wget -q "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS}_latest.zip" \
+       -O /tmp/cmdline-tools.zip \
+  && unzip -q /tmp/cmdline-tools.zip -d /tmp/cmdline-tools-extracted \
+  && mv /tmp/cmdline-tools-extracted/cmdline-tools "${ANDROID_HOME}/cmdline-tools/latest" \
+  && rm -rf /tmp/cmdline-tools.zip /tmp/cmdline-tools-extracted
+
+# Accept all SDK licenses and install required components
+RUN yes | sdkmanager --licenses > /dev/null 2>&1 \
+  && sdkmanager \
+       "platform-tools" \
+       "platforms;android-${ANDROID_COMPILE_SDK}" \
+       "build-tools;${ANDROID_BUILD_TOOLS}"
+
+# ── Stage 2: Project build ────────────────────────────────────────────────────
+FROM android-base AS builder
+
+WORKDIR /app
+
+# Install JS dependencies (cached layer)
+COPY package.json package-lock.json* yarn.lock* ./
+RUN npm install --legacy-peer-deps
+
+# Copy full project source
+COPY . .
+
+# Gradle wrapper cache (speeds up repeated builds)
+ENV GRADLE_USER_HOME=/root/.gradle
+
+# ── Build script ──────────────────────────────────────────────────────────────
+# 1. expo prebuild → generates the native android/ folder
+# 2. Gradle assembleRelease → compiles the APK
+#
+# Set BUILD_TYPE=assembleDebug for a debug build.
+ARG BUILD_TYPE=assembleRelease
+ENV BUILD_TYPE=${BUILD_TYPE}
+
+CMD ["sh", "-c", \
+  "echo '==> Running expo prebuild...' && \
+   npx expo prebuild --platform android --clean --no-install && \
+   echo '==> Running Gradle ${BUILD_TYPE}...' && \
+   cd android && chmod +x gradlew && ./gradlew ${BUILD_TYPE} --no-daemon \
+     -Pandroid.useAndroidX=true \
+     -Pandroid.enableJetifier=true && \
+   echo '==> Build complete. APK/AAB:' && \
+   find app/build/outputs -name '*.apk' -o -name '*.aab' | head -20"]

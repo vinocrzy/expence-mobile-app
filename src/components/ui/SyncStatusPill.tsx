@@ -5,16 +5,9 @@
  * Matches web's SyncStatus component.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing,
-  cancelAnimation,
-} from 'react-native-reanimated';
+import { Animated, Easing } from 'react-native';
 import {
   RefreshCw,
   AlertTriangle,
@@ -87,24 +80,32 @@ export function SyncStatusPill({
   style,
 }: SyncStatusPillProps) {
   const cfg = STATUS_CONFIG[status];
-  const rotation = useSharedValue(0);
+  const rotation = useRef(new Animated.Value(0)).current;
+  const animRef = useRef<Animated.CompositeAnimation | null>(null);
 
   useEffect(() => {
     if (status === 'SYNCING') {
-      rotation.value = withRepeat(
-        withTiming(360, { duration: 1000, easing: Easing.linear }),
-        -1,
-        false,
+      rotation.setValue(0);
+      animRef.current = Animated.loop(
+        Animated.timing(rotation, {
+          toValue: 1,
+          duration: 1000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
       );
+      animRef.current.start();
     } else {
-      cancelAnimation(rotation);
-      rotation.value = 0;
+      animRef.current?.stop();
+      rotation.setValue(0);
     }
   }, [status, rotation]);
 
-  const spinStyle = useAnimatedStyle(() => ({
-    transform: [{ rotateZ: `${rotation.value}deg` }],
-  }));
+  const spinStyle = {
+    transform: [{
+      rotateZ: rotation.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }),
+    }],
+  };
 
   return (
     <View style={[styles.pill, { backgroundColor: cfg.bg }, style]}>

@@ -3,15 +3,9 @@
  * Pill shape with animated knob.
  */
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Platform, Pressable } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  withSpring,
-  interpolateColor,
-  useSharedValue,
-  useDerivedValue,
-} from 'react-native-reanimated';
+import { Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { COLORS, FONT_SIZE, SPACING } from '@/constants';
 
@@ -36,21 +30,33 @@ export function SwitchRow({
   onValueChange,
   disabled = false,
 }: SwitchRowProps) {
-  const progress = useDerivedValue(() => (value ? 1 : 0));
+  const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
 
-  const trackStyle = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(
-      progress.value,
-      [0, 1],
-      ['#374151', COLORS.success], // gray-700 → green-500
-    ),
-  }));
+  useEffect(() => {
+    Animated.spring(progress, {
+      toValue: value ? 1 : 0,
+      damping: 18,
+      stiffness: 300,
+      mass: 0.8,
+      useNativeDriver: false,
+    }).start();
+  }, [value, progress]);
 
-  const knobStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: withSpring(progress.value * (TRACK_W - KNOB_SZ - KNOB_PAD * 2), SPRING_CFG) },
-    ],
-  }));
+  const trackStyle = {
+    backgroundColor: progress.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['#374151', COLORS.success],
+    }),
+  };
+
+  const knobStyle = {
+    transform: [{
+      translateX: progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, TRACK_W - KNOB_SZ - KNOB_PAD * 2],
+      }),
+    }],
+  };
 
   const handleToggle = () => {
     if (disabled) return;
