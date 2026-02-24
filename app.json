@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Expense Tracker",
-    "slug": "expence-mobile-app",
+    "slug": "pocket-together",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,6 +32,12 @@
     "plugins": [
       "expo-font",
       "expo-splash-screen"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "b6d16be4-028f-4615-b36e-ef2126315c87"
+      }
+    },
+    "owner": "vinocrzy"
   }
 }
