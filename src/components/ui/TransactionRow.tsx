@@ -32,6 +32,11 @@ interface TransactionRowProps {
   onPress?: () => void;
   onLongPress?: () => void;
   style?: StyleProp<ViewStyle>;
+  /**
+   * listMode — strips card bg / border / borderRadius.
+   * Use when rendering rows inside a parent GlassCard list.
+   */
+  listMode?: boolean;
 }
 
 // ─── Icon + color map ────────────────────────────────────────────────────────
@@ -84,6 +89,7 @@ export const TransactionRow = React.memo(function TransactionRow({
   onPress,
   onLongPress,
   style,
+  listMode = false,
 }: TransactionRowProps) {
   const cfg = TYPE_CONFIG[type] ?? TYPE_CONFIG.EXPENSE;
 
@@ -95,29 +101,31 @@ export const TransactionRow = React.memo(function TransactionRow({
       onPress={onPress}
       onLongPress={onLongPress}
       scaleDown={0.98}
-      style={[styles.container, style]}
+      style={[styles.card, listMode && styles.cardList, style]}
     >
-      {/* Icon */}
-      <IconCircle variant={cfg.variant} size={48}>
-        {cfg.icon}
-      </IconCircle>
+      <View style={styles.container}>
+        {/* Icon */}
+        <IconCircle variant={cfg.variant} size={44}>
+          {cfg.icon}
+        </IconCircle>
 
-      {/* Content */}
-      <View style={styles.content}>
-        <View style={styles.topRow}>
-          <Text style={styles.title} numberOfLines={1}>
-            {title}
-          </Text>
-          <Text style={[styles.amount, { color: cfg.color }]}>
-            {cfg.prefix}
-            {amount}
-          </Text>
+        {/* Content */}
+        <View style={styles.content}>
+          <View style={styles.topRow}>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+            <Text style={[styles.amount, { color: cfg.color }]}>
+              {cfg.prefix}
+              {amount}
+            </Text>
+          </View>
+          {meta ? (
+            <Text style={styles.meta} numberOfLines={1}>
+              {meta}
+            </Text>
+          ) : null}
         </View>
-        {meta ? (
-          <Text style={styles.meta} numberOfLines={1}>
-            {meta}
-          </Text>
-        ) : null}
       </View>
     </AnimatedPressable>
   );
@@ -126,18 +134,32 @@ export const TransactionRow = React.memo(function TransactionRow({
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
+  /** Card chrome — bg, border, borderRadius on the Pressable wrapper */
+  card: {
+    backgroundColor: COLORS.surfaceAlpha,
+    borderRadius: BORDER_RADIUS.xl,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    overflow: 'hidden',
+  },
+  /** listMode — strip card chrome, parent GlassCard provides it */
+  cardList: {
+    backgroundColor: 'transparent',
+    borderRadius: 0,
+    borderWidth: 0,
+    borderColor: 'transparent',
+  },
+  /** Inner row — lives inside Animated.View so it stretches to full width */
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.lg,
-    backgroundColor: COLORS.surfaceAlpha,
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.lg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
+    gap: SPACING.md,
+    paddingVertical: SPACING.md,
+    paddingHorizontal: SPACING.lg,
   },
   content: {
     flex: 1,
+    minWidth: 0,
   },
   topRow: {
     flexDirection: 'row',
@@ -145,22 +167,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
-    fontSize: 17,
+    fontSize: FONT_SIZE.base,
     fontWeight: '600',
     color: COLORS.textPrimary,
     flex: 1,
     marginRight: SPACING.sm,
   },
   amount: {
-    fontSize: 17,
+    fontSize: FONT_SIZE.base,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
     letterSpacing: -0.3,
   },
   meta: {
-    fontSize: 13,
+    fontSize: FONT_SIZE.xs,
     color: COLORS.textTertiary,
-    marginTop: 3,
+    marginTop: SPACING.xs,
   },
 });
 

@@ -234,7 +234,7 @@ export function DashboardScreen() {
             <IconCircle variant="income" size={36}>
               <PiggyBank size={18} color={COLORS.income} />
             </IconCircle>
-            <View style={{ marginLeft: SPACING.sm, flex: 1 }}>
+            <View style={styles.summaryText}>
               <Text style={styles.summaryLabel}>Total Cash</Text>
               <Text style={[styles.summaryValue, { color: COLORS.income }]}>
                 {fmt(totalCash)}
@@ -248,7 +248,7 @@ export function DashboardScreen() {
             <IconCircle variant="expense" size={36}>
               <TrendingDown size={18} color={COLORS.expense} />
             </IconCircle>
-            <View style={{ marginLeft: SPACING.sm, flex: 1 }}>
+            <View style={styles.summaryText}>
               <Text style={styles.summaryLabel}>CC Due</Text>
               <Text style={[styles.summaryValue, { color: COLORS.expense }]}>
                 {fmt(totalCCDebt)}
@@ -333,6 +333,10 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: SPACING.sm,
+  },
+  summaryText: {
+    flex: 1,
   },
   summaryLabel: {
     fontSize: FONT_SIZE.xs,

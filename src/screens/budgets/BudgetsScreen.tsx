@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     fontVariant: ['tabular-nums'],
   },
   progressTrack: {
-    height: 20,
+    height: 8,
     backgroundColor: COLORS.white5,
     borderRadius: BORDER_RADIUS.full,
     overflow: 'hidden',

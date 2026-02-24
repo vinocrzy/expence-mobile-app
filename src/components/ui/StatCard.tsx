@@ -59,7 +59,7 @@ export const StatCard = React.memo(function StatCard({
 
 const styles = StyleSheet.create({
   card: {
-    minHeight: 140,
+    minHeight: 130,
     justifyContent: 'space-between',
   },
   topRow: {
@@ -67,9 +67,9 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   iconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   trend: {
     fontSize: FONT_SIZE.xs,
     fontWeight: '500',
-    marginTop: 2,
+    marginTop: SPACING.xs,
   },
 });
 

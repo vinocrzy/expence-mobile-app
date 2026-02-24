@@ -23,7 +23,7 @@ import {
   Plus,
 } from 'lucide-react-native';
 
-import { COLORS, FONT_SIZE, SPACING, ICON_SIZE, BORDER_RADIUS } from '@/constants';
+import { COLORS, FONT_SIZE, SPACING, ICON_SIZE } from '@/constants';
 import type { RootStackParamList } from '@/navigation/types';
 import {
   useAccounts,
@@ -43,7 +43,7 @@ import {
   HeroCard,
   GlassCard,
   SectionHeader,
-  ListItem,
+  AnimatedPressable,
   IconCircle,
   ScreenHeader,
   SkeletonCard,
@@ -138,23 +138,31 @@ export function FinancesScreen() {
       {/* Cash vs CC Due summary */}
       <View style={styles.twoCol}>
         <GlassCard padding="lg" style={styles.summaryCard}>
-          <IconCircle variant="income" size={36}>
-            <Landmark size={18} color={COLORS.income} />
-          </IconCircle>
-          <Text style={styles.summaryLabel}>Total Cash</Text>
-          <Text style={[styles.summaryValue, { color: COLORS.income }]}>
-            {fmt(totalCash)}
-          </Text>
+          <View style={styles.summaryRow}>
+            <IconCircle variant="income" size={36}>
+              <Landmark size={18} color={COLORS.income} />
+            </IconCircle>
+            <View style={styles.summaryText}>
+              <Text style={styles.summaryLabel}>Total Cash</Text>
+              <Text style={[styles.summaryValue, { color: COLORS.income }]}>
+                {fmt(totalCash)}
+              </Text>
+            </View>
+          </View>
         </GlassCard>
 
         <GlassCard padding="lg" style={styles.summaryCard}>
-          <IconCircle variant="expense" size={36}>
-            <CreditCard size={18} color={COLORS.expense} />
-          </IconCircle>
-          <Text style={styles.summaryLabel}>CC Due</Text>
-          <Text style={[styles.summaryValue, { color: COLORS.expense }]}>
-            {fmt(totalCCDebt)}
-          </Text>
+          <View style={styles.summaryRow}>
+            <IconCircle variant="expense" size={36}>
+              <CreditCard size={18} color={COLORS.expense} />
+            </IconCircle>
+            <View style={styles.summaryText}>
+              <Text style={styles.summaryLabel}>CC Due</Text>
+              <Text style={[styles.summaryValue, { color: COLORS.expense }]}>
+                {fmt(totalCCDebt)}
+              </Text>
+            </View>
+          </View>
         </GlassCard>
       </View>
 
@@ -175,31 +183,40 @@ export function FinancesScreen() {
           <Text style={styles.emptyText}>No bank accounts added</Text>
         </GlassCard>
       ) : (
-        <GlassCard padding={0} style={{ overflow: 'hidden' as const }}>
-          {bankAccounts.map((acc, idx) => (
-            <ListItem
-              key={acc.id}
-              title={acc.name}
-              subtitle={(acc.type || '').toLowerCase().replace(/_/g, ' ')}
-              leftIcon={
-                <IconCircle variant="primary" size={32}>
-                  <Wallet size={16} color={COLORS.primaryLight} />
-                </IconCircle>
-              }
-              rightElement={
-                <Text style={styles.amount}>{fmt(acc.balance || 0)}</Text>
-              }
-              onPress={() =>
-                navigation.navigate('AccountDetail', { id: acc.id })
-              }
-              style={
-                idx < bankAccounts.length - 1
-                  ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border }
-                  : undefined
-              }
-            />
-          ))}
-        </GlassCard>
+        <View style={styles.cardList}>
+          {bankAccounts.map((acc) => {
+            const balance = acc.balance || 0;
+            const balanceColor = balance >= 0 ? COLORS.income : COLORS.expense;
+            return (
+              <AnimatedPressable
+                key={acc.id}
+                scaleDown={0.98}
+                onPress={() => navigation.navigate('AccountDetail', { id: acc.id })}
+              >
+                <GlassCard padding="lg">
+                  <View style={styles.itemRow}>
+                    <IconCircle variant="primary" size={44}>
+                      <Wallet size={ICON_SIZE.md} color={COLORS.primaryLight} />
+                    </IconCircle>
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemTitle} numberOfLines={1}>{acc.name}</Text>
+                      <Text style={styles.itemSubtitle}>
+                        {(acc.type || 'Account').replace(/_/g, ' ')}
+                      </Text>
+                    </View>
+                    <View style={styles.itemRight}>
+                      <Text style={styles.itemRightLabel}>Balance</Text>
+                      <Text style={[styles.itemRightAmount, { color: balanceColor }]}>
+                        {fmt(balance)}
+                      </Text>
+                    </View>
+                    <ChevronRight size={ICON_SIZE.sm} color={COLORS.textTertiary} />
+                  </View>
+                </GlassCard>
+              </AnimatedPressable>
+            );
+          })}
+        </View>
       )}
 
       {/* ── Credit Cards ── */}
@@ -216,36 +233,47 @@ export function FinancesScreen() {
           <Text style={styles.emptyText}>No credit cards added</Text>
         </GlassCard>
       ) : (
-        <GlassCard padding={0} style={{ overflow: 'hidden' as const }}>
-          {activeCards.map((card, idx) => (
-            <ListItem
-              key={card.id}
-              title={card.bankName || card.name}
-              subtitle={card.name}
-              leftIcon={
-                <IconCircle variant="debt" size={32}>
-                  <CreditCard size={16} color={COLORS.debt} />
-                </IconCircle>
-              }
-              rightElement={
-                <View style={{ alignItems: 'flex-end' as const }}>
-                  <Text style={styles.dueLabel}>Due</Text>
-                  <Text style={[styles.amount, { color: COLORS.expense }]}>
-                    {fmt(card.currentOutstanding || 0)}
-                  </Text>
-                </View>
-              }
-              onPress={() =>
-                navigation.navigate('CreditCardDetail', { id: card.id })
-              }
-              style={
-                idx < activeCards.length - 1
-                  ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border }
-                  : undefined
-              }
-            />
-          ))}
-        </GlassCard>
+        <View style={styles.cardList}>
+          {activeCards.map((card) => {
+            const outstanding = card.currentOutstanding || 0;
+            const limit = card.creditLimit || 0;
+            const utilPct = limit > 0 ? Math.round((outstanding / limit) * 100) : 0;
+            const subtitle = card.lastFourDigits
+              ? `•••• ${card.lastFourDigits}`
+              : card.name;
+            return (
+              <AnimatedPressable
+                key={card.id}
+                scaleDown={0.98}
+                onPress={() => navigation.navigate('CreditCardDetail', { id: card.id })}
+              >
+                <GlassCard padding="lg">
+                  <View style={styles.itemRow}>
+                    <IconCircle variant="debt" size={44}>
+                      <CreditCard size={ICON_SIZE.md} color={COLORS.debt} />
+                    </IconCircle>
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemTitle} numberOfLines={1}>
+                        {card.bankName || card.name}
+                      </Text>
+                      <Text style={styles.itemSubtitle}>{subtitle}</Text>
+                    </View>
+                    <View style={styles.itemRight}>
+                      <Text style={styles.itemRightLabel}>Outstanding</Text>
+                      <Text style={[styles.itemRightAmount, { color: COLORS.expense }]}>
+                        {fmt(outstanding)}
+                      </Text>
+                      {limit > 0 && (
+                        <Text style={styles.itemRightMeta}>{utilPct}% used</Text>
+                      )}
+                    </View>
+                    <ChevronRight size={ICON_SIZE.sm} color={COLORS.textTertiary} />
+                  </View>
+                </GlassCard>
+              </AnimatedPressable>
+            );
+          })}
+        </View>
       )}
 
       {/* ── Loans ── */}
@@ -262,36 +290,39 @@ export function FinancesScreen() {
           <Text style={styles.emptyText}>No active loans</Text>
         </GlassCard>
       ) : (
-        <GlassCard padding={0} style={{ overflow: 'hidden' as const }}>
-          {activeLoans.map((loan, idx) => (
-            <ListItem
+        <View style={styles.cardList}>
+          {activeLoans.map((loan) => (
+            <AnimatedPressable
               key={loan.id}
-              title={loan.name}
-              subtitle={loan.lender || ''}
-              leftIcon={
-                <IconCircle variant="warning" size={32}>
-                  <Landmark size={16} color={COLORS.warning} />
-                </IconCircle>
-              }
-              rightElement={
-                <View style={{ alignItems: 'flex-end' as const }}>
-                  <Text style={styles.dueLabel}>Outstanding</Text>
-                  <Text style={[styles.amount, { color: COLORS.warning }]}>
-                    {fmt(loan.outstandingPrincipal || 0)}
-                  </Text>
+              scaleDown={0.98}
+              onPress={() => navigation.navigate('LoanDetail', { id: loan.id })}
+            >
+              <GlassCard padding="lg">
+                <View style={styles.itemRow}>
+                  <IconCircle variant="warning" size={44}>
+                    <Landmark size={ICON_SIZE.md} color={COLORS.warning} />
+                  </IconCircle>
+                  <View style={styles.itemInfo}>
+                    <Text style={styles.itemTitle} numberOfLines={1}>{loan.name}</Text>
+                    <Text style={styles.itemSubtitle}>
+                      {loan.lender || 'Loan'}
+                    </Text>
+                  </View>
+                  <View style={styles.itemRight}>
+                    <Text style={styles.itemRightLabel}>Outstanding</Text>
+                    <Text style={[styles.itemRightAmount, { color: COLORS.warning }]}>
+                      {fmt(loan.outstandingPrincipal || 0)}
+                    </Text>
+                    {loan.emiAmount ? (
+                      <Text style={styles.itemRightMeta}>EMI {fmt(loan.emiAmount)}/mo</Text>
+                    ) : null}
+                  </View>
+                  <ChevronRight size={ICON_SIZE.sm} color={COLORS.textTertiary} />
                 </View>
-              }
-              onPress={() =>
-                navigation.navigate('LoanDetail', { id: loan.id })
-              }
-              style={
-                idx < activeLoans.length - 1
-                  ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border }
-                  : undefined
-              }
-            />
+              </GlassCard>
+            </AnimatedPressable>
           ))}
-        </GlassCard>
+        </View>
       )}
 
       {/* Bottom spacer */}
@@ -350,34 +381,72 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: SPACING.sm,
+  },
+  summaryText: {
+    flex: 1,
   },
   summaryLabel: {
     fontSize: FONT_SIZE.xs,
     color: COLORS.textTertiary,
     fontWeight: '500',
-    marginTop: SPACING.sm,
   },
   summaryValue: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     fontVariant: ['tabular-nums'],
-  },
-  amount: {
-    fontSize: FONT_SIZE.sm,
-    fontWeight: '700',
-    color: COLORS.textPrimary,
-    fontVariant: ['tabular-nums'],
-  },
-  dueLabel: {
-    fontSize: 10,
-    color: COLORS.textTertiary,
-    fontWeight: '500',
-    marginBottom: 1,
+    marginTop: 2,
   },
   emptyText: {
     fontSize: FONT_SIZE.sm,
     color: COLORS.textTertiary,
     textAlign: 'center',
+  },
+  /** Per-item card list */
+  cardList: {
+    gap: SPACING.sm,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.md,
+  },
+  itemInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  itemTitle: {
+    fontSize: FONT_SIZE.base,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  itemSubtitle: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textTertiary,
+    marginTop: 2,
+    textTransform: 'capitalize',
+  },
+  itemRight: {
+    alignItems: 'flex-end',
+  },
+  itemRightLabel: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textTertiary,
+    fontWeight: '500',
+  },
+  itemRightAmount: {
+    fontSize: FONT_SIZE.base,
+    fontWeight: '700',
+    fontVariant: ['tabular-nums'],
+    marginTop: 1,
+  },
+  itemRightMeta: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textTertiary,
+    marginTop: 2,
   },
 });

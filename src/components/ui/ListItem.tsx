@@ -66,15 +66,13 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: SPACING.md + 2,
+    paddingVertical: SPACING.md,
     paddingHorizontal: SPACING.lg,
     gap: SPACING.md,
   },
   iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
-    backgroundColor: COLORS.white5,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },

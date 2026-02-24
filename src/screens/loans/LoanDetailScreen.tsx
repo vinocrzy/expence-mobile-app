@@ -361,8 +361,8 @@ const styles = StyleSheet.create({
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: SPACING.xs },
   progressSub: { fontSize: FONT_SIZE.xs, color: COLORS.textTertiary },
 
-  breakdownCard: { flex: 1, alignItems: 'center', gap: SPACING.xs },
-  breakdownLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textTertiary },
+  breakdownCard: { flex: 1, alignItems: 'flex-start', gap: SPACING.xs },
+  breakdownLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textTertiary, fontWeight: '500' },
   breakdownValue: { fontSize: FONT_SIZE.lg, fontWeight: '700' },
 
   actionRow: { flexDirection: 'row', justifyContent: 'center', gap: SPACING.xl, marginBottom: SPACING.lg },

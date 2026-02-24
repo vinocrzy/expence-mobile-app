@@ -326,9 +326,10 @@ export function CreditCardDetailScreen({ route, navigation }: Props) {
               <TransactionRow
                 key={tx.id}
                 title={tx.description || 'Transaction'}
-                amount={String(tx.amount)}
+                amount={fmt(tx.amount)}
                 type={tx.type as any}
-                date={tx.date}
+                date={new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                listMode
                 style={
                   idx < Math.min(transactions.length, 20) - 1
                     ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border }
@@ -363,8 +364,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: SPACING.lg, paddingBottom: 120 },
 
   cardVisual: {
-    borderRadius: BORDER_RADIUS.xl,
-    padding: SPACING.xl,
+    borderRadius: BORDER_RADIUS['3xl'],
+    padding: SPACING['2xl'],
     marginBottom: SPACING.lg,
   },
   cardTop: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm, marginBottom: SPACING.md },

@@ -209,19 +209,27 @@ export function AccountDetailScreen({ route, navigation }: Props) {
         {/* Income / Expense summary */}
         <View style={styles.twoCol}>
           <GlassCard padding="lg" style={styles.summaryCard}>
-            <IconCircle variant="income" size={32}>
-              <ArrowDownLeft size={16} color={COLORS.income} />
-            </IconCircle>
-            <Text style={styles.summaryLabel}>Income</Text>
-            <Text style={[styles.summaryValue, { color: COLORS.income }]}>{fmt(income)}</Text>
+            <View style={styles.summaryRow}>
+              <IconCircle variant="income" size={36}>
+                <ArrowDownLeft size={16} color={COLORS.income} />
+              </IconCircle>
+              <View style={styles.summaryText}>
+                <Text style={styles.summaryLabel}>Income</Text>
+                <Text style={[styles.summaryValue, { color: COLORS.income }]}>{fmt(income)}</Text>
+              </View>
+            </View>
           </GlassCard>
 
           <GlassCard padding="lg" style={styles.summaryCard}>
-            <IconCircle variant="expense" size={32}>
-              <ArrowUpRight size={16} color={COLORS.expense} />
-            </IconCircle>
-            <Text style={styles.summaryLabel}>Expenses</Text>
-            <Text style={[styles.summaryValue, { color: COLORS.expense }]}>{fmt(expense)}</Text>
+            <View style={styles.summaryRow}>
+              <IconCircle variant="expense" size={36}>
+                <ArrowUpRight size={16} color={COLORS.expense} />
+              </IconCircle>
+              <View style={styles.summaryText}>
+                <Text style={styles.summaryLabel}>Expenses</Text>
+                <Text style={[styles.summaryValue, { color: COLORS.expense }]}>{fmt(expense)}</Text>
+              </View>
+            </View>
           </GlassCard>
         </View>
 
@@ -256,9 +264,10 @@ export function AccountDetailScreen({ route, navigation }: Props) {
               <TransactionRow
                 key={tx.id}
                 title={tx.description || 'Transaction'}
-                amount={String(tx.amount)}
+                amount={fmt(tx.amount)}
                 type={tx.type as any}
-                date={tx.date}
+                date={new Date(tx.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                listMode
                 style={
                   idx < Math.min(transactions.length, 20) - 1
                     ? { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: COLORS.border }
@@ -290,9 +299,11 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   content: { paddingHorizontal: SPACING.lg, paddingBottom: 120 },
   twoCol: { flexDirection: 'row', gap: SPACING.md, marginBottom: SPACING.lg },
-  summaryCard: { flex: 1, alignItems: 'center', gap: SPACING.xs },
-  summaryLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textTertiary, marginTop: SPACING.xs },
-  summaryValue: { fontSize: FONT_SIZE.lg, fontWeight: '700' },
+  summaryCard: { flex: 1 },
+  summaryRow: { flexDirection: 'row', alignItems: 'center', gap: SPACING.sm },
+  summaryText: { flex: 1 },
+  summaryLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textTertiary, fontWeight: '500' },
+  summaryValue: { fontSize: FONT_SIZE.lg, fontWeight: '700', marginTop: 2 },
   actionRow: { flexDirection: 'row', justifyContent: 'center', gap: SPACING.xl, marginBottom: SPACING.lg },
   actionBtn: { alignItems: 'center', gap: 6, paddingVertical: SPACING.sm, paddingHorizontal: SPACING.md },
   actionLabel: { fontSize: FONT_SIZE.xs, color: COLORS.textSecondary, fontWeight: '600' },

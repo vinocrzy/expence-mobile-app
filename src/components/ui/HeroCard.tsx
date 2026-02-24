@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     marginTop: SPACING.sm,
   },
   subtitle: {
-    fontSize: 10,
+    fontSize: FONT_SIZE.xs,
     fontWeight: '500',
     color: 'rgba(255,255,255,0.8)',
   },
