@@ -13,6 +13,7 @@ import mapreduce from 'pouchdb-mapreduce';
 import replication from 'pouchdb-replication';
 import find from 'pouchdb-find';
 import memoryAdapter from 'pouchdb-adapter-memory';
+import { logger } from './logger';
 
 // Register plugins
 PouchDB.plugin(HttpPouch);
@@ -53,12 +54,50 @@ export const collections: Record<string, PouchDB.Database> = {
 let initialized = false;
 
 /**
+ * Safe wrapper for any PouchDB operation.
+ * Catches both JS and unexpected native-bridge errors, logs them with full
+ * context, then re-throws so the caller can surface the error to the UI.
+ */
+export async function safeDbOp<T>(
+  label: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (err) {
+    logger.captureError('PouchDB', label, err);
+    throw err;
+  }
+}
+
+/**
+ * Destroys and recreates all databases — used in tests only.
+ * Never call this in production code.
+ */
+export async function resetAllDBs(): Promise<void> {
+  initialized = false;
+  await Promise.all([
+    accountsDB.destroy(),
+    transactionsDB.destroy(),
+    categoriesDB.destroy(),
+    creditcardsDB.destroy(),
+    loansDB.destroy(),
+    budgetsDB.destroy(),
+    recurringDB.destroy(),
+    sharedDB.destroy(),
+  ]);
+  // Re-assign the singletons in place
+  (accountsDB    as any).__opts = {};
+  await initDB();
+}
+
+/**
  * Initialize all PouchDB indexes.
  * Must be called once at app startup (from LocalFirstContext).
  */
 export const initDB = async (): Promise<void> => {
   if (initialized) return;
-  console.log('[PouchDB] Initializing indexes...');
+  logger.info('PouchDB', 'Initializing indexes...');
 
   try {
     // Transaction indexes
@@ -91,9 +130,9 @@ export const initDB = async (): Promise<void> => {
     await recurringDB.createIndex({ index: { fields: ['nextDueDate'] } });
     await recurringDB.createIndex({ index: { fields: ['status'] } });
 
-    console.log('[PouchDB] Indexes initialized.');
+    logger.info('PouchDB', 'Indexes initialized.');
     initialized = true;
   } catch (err) {
-    console.error('[PouchDB] Failed to initialize indexes:', err);
+    logger.captureError('PouchDB', 'Failed to initialize indexes', err);
   }
 };

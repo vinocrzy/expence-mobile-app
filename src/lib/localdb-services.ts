@@ -16,6 +16,7 @@ import {
   recurringDB,
   sharedDB,
   initDB,
+  safeDbOp,
 } from './pouchdb';
 import { v4 as uuidv4 } from 'uuid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -110,7 +111,10 @@ export const accountService = {
       updatedAt: now,
     };
     const docToSave = { ...account, _id: id };
-    const response = await accountsDB.put(docToSave);
+    const response = await safeDbOp(
+      'accountsDB.put',
+      () => accountsDB.put(docToSave),
+    );
     return { ...account, _rev: response.rev };
   },
 
