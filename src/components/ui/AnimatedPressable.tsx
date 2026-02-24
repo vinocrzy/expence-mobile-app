@@ -15,6 +15,7 @@ interface AnimatedPressableProps {
   scaleDown?: number;
   haptic?: boolean;
   disabled?: boolean;
+  childStyle?: StyleProp<ViewStyle>;
 }
 
 const SPRING_CFG = { damping: 15, stiffness: 400, mass: 0.3, useNativeDriver: true };
@@ -27,6 +28,7 @@ export function AnimatedPressable({
   scaleDown = 0.97,
   haptic = false,
   disabled = false,
+  childStyle = {},
 }: AnimatedPressableProps) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -61,7 +63,7 @@ export function AnimatedPressable({
       style={style}
     >
       <Animated.View
-        style={{ transform: [{ scale }], opacity: disabled ? 0.5 : 1 }}
+        style={{ transform: [{ scale }], opacity: disabled ? 0.5 : 1, ...(childStyle as object) } as ViewStyle}
       >
         {children}
       </Animated.View>

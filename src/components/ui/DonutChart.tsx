@@ -1,14 +1,14 @@
-/**
- * DonutChart — pure react-native-svg donut/pie chart.
+﻿/**
+ * DonutChart — animated pie/donut chart powered by react-native-chart-kit.
  *
- * Used in Analytics for category breakdown. Renders arcs with optional
- * center label and tappable slices.
+ * Renders a PieChart with a center-hole overlay (donut style), spring entry
+ * animation, and optional center value + label text.
  */
 
-import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
-import Svg, { Path, G } from 'react-native-svg';
-import { COLORS, FONT_SIZE, SPACING } from '@/constants';
+import React, { useEffect, useRef } from 'react';
+import { View, StyleSheet, Text, Animated } from 'react-native';
+import { PieChart } from 'react-native-chart-kit';
+import { COLORS, FONT_SIZE } from '@/constants';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -21,24 +21,11 @@ export interface DonutSlice {
 interface DonutChartProps {
   data: DonutSlice[];
   size?: number;
+  /** @deprecated kept for API compatibility — no longer used */
   strokeWidth?: number;
   centerLabel?: string;
   centerValue?: string;
   onSlicePress?: (slice: DonutSlice, index: number) => void;
-}
-
-// ─── Arc math ────────────────────────────────────────────────────────────────
-
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-}
-
-function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
-  const start = polarToCartesian(cx, cy, r, endAngle);
-  const end = polarToCartesian(cx, cy, r, startAngle);
-  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
 }
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -46,66 +33,101 @@ function describeArc(cx: number, cy: number, r: number, startAngle: number, endA
 export function DonutChart({
   data,
   size = 200,
-  strokeWidth = 28,
   centerLabel,
   centerValue,
 }: DonutChartProps) {
+  const scale = useRef(new Animated.Value(0.65)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
   const total = data.reduce((s, d) => s + d.value, 0);
+
+  useEffect(() => {
+    if (total === 0) return;
+    scale.setValue(0.65);
+    opacity.setValue(0);
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: 1,
+        tension: 55,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 1,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [total]);
+
   if (total === 0) return null;
 
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = (size - strokeWidth) / 2;
-  const gap = 2; // degrees gap between slices
+  // The hole diameter sits over the pie center to create the donut ring look
+  const holeDiameter = size * 0.52;
 
-  let currentAngle = 0;
+  const chartConfig = {
+    backgroundGradientFrom: 'transparent',
+    backgroundGradientTo: 'transparent',
+    backgroundGradientFromOpacity: 0,
+    backgroundGradientToOpacity: 0,
+    color: (opacity = 1) => `rgba(255,255,255,${opacity})`,
+  };
 
-  const arcs = data.map((slice) => {
-    const sliceAngle = (slice.value / total) * 360;
-    const start = currentAngle + gap / 2;
-    const end = currentAngle + sliceAngle - gap / 2;
-    currentAngle += sliceAngle;
+  // react-native-chart-kit PieChart data shape
+  const pieData = data.map((d) => ({
+    name: d.label,
+    population: d.value,
+    color: d.color,
+    legendFontColor: COLORS.textSecondary,
+    legendFontSize: 12,
+  }));
 
-    // For very small slices, skip rendering
-    if (sliceAngle < 1) return null;
-
-    // Handle full circle (single slice)
-    if (sliceAngle >= 359) {
-      const path = describeArc(cx, cy, radius, 0, 359.99);
-      return { path, color: slice.color, label: slice.label };
-    }
-
-    const path = describeArc(cx, cy, radius, start, end);
-    return { path, color: slice.color, label: slice.label };
-  });
+  // With paddingLeft="0" and hasLegend=false the pie center is (size/2, size/2)
+  const holeLeft = size / 2 - holeDiameter / 2;
+  const holeTop = size / 2 - holeDiameter / 2;
 
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      <Svg width={size} height={size}>
-        <G>
-          {arcs.map((arc, i) =>
-            arc ? (
-              <Path
-                key={i}
-                d={arc.path}
-                fill="none"
-                stroke={arc.color}
-                strokeWidth={strokeWidth}
-                strokeLinecap="round"
-              />
-            ) : null,
-          )}
-        </G>
-      </Svg>
+    <Animated.View
+      style={[
+        styles.container,
+        { width: size, height: size, opacity, transform: [{ scale }] },
+      ]}
+    >
+      <PieChart
+        data={pieData}
+        width={size}
+        height={size}
+        chartConfig={chartConfig}
+        accessor="population"
+        backgroundColor="transparent"
+        paddingLeft="0"
+        hasLegend={false}
+        center={[0, 0]}
+        absolute={false}
+      />
 
-      {/* Center label */}
-      {(centerLabel || centerValue) && (
-        <View style={styles.center}>
-          {centerValue && <Text style={styles.centerValue}>{centerValue}</Text>}
-          {centerLabel && <Text style={styles.centerLabel}>{centerLabel}</Text>}
-        </View>
-      )}
-    </View>
+      {/* Donut hole — covers the pie center to produce the ring effect */}
+      <View
+        style={[
+          styles.hole,
+          {
+            width: holeDiameter,
+            height: holeDiameter,
+            borderRadius: holeDiameter / 2,
+            left: holeLeft,
+            top: holeTop,
+          },
+        ]}
+      >
+        {centerValue ? (
+          <Text style={styles.centerValue}>{centerValue}</Text>
+        ) : null}
+        {centerLabel ? (
+          <Text style={styles.centerLabel}>{centerLabel}</Text>
+        ) : null}
+      </View>
+    </Animated.View>
   );
 }
 
@@ -114,22 +136,25 @@ export function DonutChart({
 const styles = StyleSheet.create({
   container: {
     alignSelf: 'center',
-    justifyContent: 'center',
-    alignItems: 'center',
+    position: 'relative',
   },
-  center: {
-    ...StyleSheet.absoluteFillObject,
+  hole: {
+    position: 'absolute',
+    // Match the GlassCard background so the hole blends with the card surface
+    backgroundColor: COLORS.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   centerValue: {
-    fontSize: FONT_SIZE.xl,
+    fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     color: COLORS.textPrimary,
+    textAlign: 'center',
   },
   centerLabel: {
     fontSize: FONT_SIZE.xs,
     color: COLORS.textTertiary,
     marginTop: 2,
+    textAlign: 'center',
   },
 });
