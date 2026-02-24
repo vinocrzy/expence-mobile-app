@@ -13,6 +13,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, Rea
 import { useUser, useClerk, useAuth as useClerkAuth } from '@clerk/clerk-expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from '@/lib/logger';
 import { setHouseholdId, setCurrentUser } from '@/lib/localdb-services';
 
 const safeUuid = (): string => {
@@ -112,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
         }
       } catch (e) {
-        console.error('[Auth] cache restore failed', e);
+        logger.captureError('Auth', 'cache restore failed', e);
       }
     })();
   }, []);
@@ -168,7 +169,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setHouseholdId(null);
       setCurrentUser(null);
     } catch (error) {
-      console.error('[Auth] logout failed', error);
+      logger.captureError('Auth', 'logout failed', error);
     }
   };
 
@@ -196,7 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setHouseholdId(guestId);
       setCurrentUser({ id: guestId, name: 'Guest', color: '#A78BFA' });
     } catch (error) {
-      console.error('[Auth] enterGuestMode failed', error);
+      logger.captureError('Auth', 'enterGuestMode failed', error);
     }
   }, []);
 
@@ -208,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setHouseholdId(null);
       setCurrentUser(null);
     } catch (error) {
-      console.error('[Auth] exitGuestMode failed', error);
+      logger.captureError('Auth', 'exitGuestMode failed', error);
     }
   }, []);
 

@@ -18,7 +18,17 @@ import {
   initDB,
 } from './pouchdb';
 import { v4 as uuidv4 } from 'uuid';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { logger } from './logger';
+
+/**
+ * Key used to persist the active householdId to AsyncStorage.
+ * Storing it here (alongside the in-memory variable) means
+ * getHouseholdId() can always recover even if the service was
+ * called before AuthContext finished its async startup — e.g.
+ * when hooks fire their first useEffect on app mount.
+ */
+export const HOUSEHOLD_STORAGE_KEY = 'pocket_household_id';
 import type {
   Account,
   Category,
@@ -998,6 +1008,13 @@ let currentUser: { id: string; name: string; color?: string } | null = null;
 
 export const setHouseholdId = (id: string | null) => {
   currentHouseholdId = id;
+  // Persist to AsyncStorage so getHouseholdId() can recover from the
+  // startup race condition without relying on AuthContext having run first.
+  if (id) {
+    AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, id).catch(() => {/* non-critical */});
+  } else {
+    AsyncStorage.removeItem(HOUSEHOLD_STORAGE_KEY).catch(() => {/* non-critical */});
+  }
 };
 
 export const setCurrentUser = (user: { id: string; name: string; color?: string } | null) => {
@@ -1005,12 +1022,25 @@ export const setCurrentUser = (user: { id: string; name: string; color?: string 
 };
 
 export const getHouseholdId = async (): Promise<string> => {
-  if (!currentHouseholdId) {
-    console.warn('[Services] getHouseholdId called but no householdId set. Using fallback.');
-    logger.warn('Services', 'getHouseholdId called but no householdId set. Using fallback.');
-    return 'household_1';
+  // Fast path: already hydrated in memory (99% of calls after startup)
+  if (currentHouseholdId) return currentHouseholdId;
+
+  // Slow path: startup race — AuthContext hasn't set the in-memory value yet.
+  // Read the persisted value we wrote during the previous setHouseholdId call.
+  try {
+    const stored = await AsyncStorage.getItem(HOUSEHOLD_STORAGE_KEY);
+    if (stored) {
+      currentHouseholdId = stored; // warm the in-memory cache for subsequent calls
+      logger.info('Services', 'getHouseholdId: recovered from AsyncStorage', { stored });
+      return stored;
+    }
+  } catch (e) {
+    logger.warn('Services', 'getHouseholdId: AsyncStorage read failed', e);
   }
-  return currentHouseholdId;
+
+  // Nothing found — user is not yet authenticated (first-launch before any sign-in/guest).
+  logger.warn('Services', 'getHouseholdId: no householdId available yet, using temp fallback');
+  return 'household_1';
 };
 
 export const getCurrentUser = () => currentUser;
