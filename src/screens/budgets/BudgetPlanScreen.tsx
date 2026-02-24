@@ -24,7 +24,7 @@ import {
 } from 'lucide-react-native';
 
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, ICON_SIZE } from '@/constants';
-import type { RootStackParamList } from '@/navigation/types';
+import type { RootStackParamList, MoreStackParamList } from '@/navigation/types';
 import { budgetService } from '@/lib/localdb-services';
 import {
   ScreenHeader,
@@ -38,7 +38,7 @@ import {
   SectionHeader,
 } from '@/components/ui';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'BudgetPlan'>;
+type Props = NativeStackScreenProps<MoreStackParamList, 'BudgetPlan'>;
 
 const fmt = (n: number) =>
   `₹${Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;

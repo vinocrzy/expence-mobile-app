@@ -14,7 +14,6 @@ import {
   FlatList,
   RefreshControl,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -52,6 +51,7 @@ import {
   SkeletonCard,
   SkeletonRow,
   IconCircle,
+  ScreenHeader,
 } from '@/components/ui';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -70,7 +70,6 @@ const fmtFull = (n: number) =>
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function DashboardScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const { transactions, loading: txLoading } = useTransactions();
   const { accounts, loading: accLoading } = useAccounts();
@@ -154,19 +153,22 @@ export function DashboardScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={COLORS.primaryLight}
-          colors={[COLORS.primaryLight]}
-        />
-      }
-    >
+    <View style={styles.container}>
+      <ScreenHeader title="Overview" showBack={false} />
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primaryLight}
+            colors={[COLORS.primaryLight]}
+          />
+        }
+      >
       {/* ── Hero Balance Card ── */}
       {loading ? (
         <SkeletonCard style={{ marginBottom: SPACING.lg }} />
@@ -293,8 +295,9 @@ export function DashboardScreen() {
       )}
 
       {/* Bottom spacer for tab bar */}
-      <View style={{ height: 100 }} />
-    </ScrollView>
+      <View style={{ height: 120 }} />
+      </ScrollView>
+    </View>
   );
 }
 
@@ -305,9 +308,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: SPACING.lg,
-    paddingTop: SPACING.lg,
+    paddingTop: SPACING.md,
   },
   statsRow: {
     gap: SPACING.md,
@@ -319,6 +325,7 @@ const styles = StyleSheet.create({
   twoCol: {
     flexDirection: 'row',
     gap: SPACING.md,
+    marginBottom: SPACING.xl,
   },
   summaryCard: {
     flex: 1,

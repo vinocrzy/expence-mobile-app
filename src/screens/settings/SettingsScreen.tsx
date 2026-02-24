@@ -30,7 +30,7 @@ import {
 } from 'lucide-react-native';
 
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, ICON_SIZE } from '@/constants';
-import type { RootStackParamList } from '@/navigation/types';
+import type { MoreStackParamList } from '@/navigation/types';
 import { collections } from '@/lib/pouchdb';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -43,7 +43,7 @@ import {
   SyncStatusPill,
 } from '@/components/ui';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = NativeStackNavigationProp<MoreStackParamList>;
 
 // ─── Backup helpers ──────────────────────────────────────────────────────────
 

@@ -28,19 +28,21 @@ describe('getHouseholdId()', () => {
   });
 
   it('recovers from AsyncStorage when the in-memory value is null (startup race)', async () => {
-    // Simulate: AuthContext called setHouseholdId previously (persisted to storage)
-    // but the in-memory value has been cleared (module reload / test isolation)
-    await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, 'hh-stored-456');
-    // Do NOT call setHouseholdId — simulate the race condition
+    // Simulate the startup race: in-memory value is cleared (module reload),
+    // but a previous session persisted the householdId to AsyncStorage.
+    // Clear memory FIRST (which also clears storage), then write to storage
+    // so that getHouseholdId() can recover from the persisted value.
     setHouseholdId(null as any);
+    await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, 'hh-stored-456');
 
     const id = await getHouseholdId();
     expect(id).toBe('hh-stored-456');
   });
 
   it('warms the in-memory cache after recovering from AsyncStorage', async () => {
-    await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, 'hh-warmup-789');
+    // Clear memory first, then set storage (same pattern as startup race)
     setHouseholdId(null as any);
+    await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, 'hh-warmup-789');
 
     await getHouseholdId(); // first call — reads storage
     // Second call should use in-memory (we can verify by checking that

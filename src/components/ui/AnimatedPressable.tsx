@@ -4,8 +4,7 @@
  */
 
 import React, { useRef } from 'react';
-import { Platform, type ViewStyle, type StyleProp, Animated } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { Platform, Pressable, type ViewStyle, type StyleProp, Animated } from 'react-native';
 import * as Haptics from 'expo-haptics';
 
 interface AnimatedPressableProps {
@@ -34,44 +33,38 @@ export function AnimatedPressable({
   const animateTo = (toValue: number) =>
     Animated.spring(scale, { toValue, ...SPRING_CFG }).start();
 
-  const tap = Gesture.Tap()
-    .enabled(!disabled)
-    .onBegin(() => animateTo(scaleDown))
-    .onFinalize(() => animateTo(1))
-    .onEnd(() => {
-      if (haptic && Platform.OS !== 'web') {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
-      if (onPress) onPress();
-    });
+  const handlePressIn = () => animateTo(scaleDown);
+  const handlePressOut = () => animateTo(1);
 
-  const longPress = Gesture.LongPress()
-    .enabled(!disabled && !!onLongPress)
-    .minDuration(400)
-    .onBegin(() => animateTo(scaleDown))
-    .onEnd((_e, success) => {
-      animateTo(1);
-      if (success) {
-        if (haptic && Platform.OS !== 'web') {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        }
-        if (onLongPress) onLongPress();
-      }
-    })
-    .onFinalize(() => animateTo(1));
+  const handlePress = () => {
+    if (haptic && Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    onPress?.();
+  };
 
-  const gesture = onLongPress ? Gesture.Race(longPress, tap) : tap;
+  const handleLongPress = () => {
+    if (haptic && Platform.OS !== 'web') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    onLongPress?.();
+  };
 
   return (
-    <GestureDetector gesture={gesture}>
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      onPress={handlePress}
+      onLongPress={onLongPress ? handleLongPress : undefined}
+      delayLongPress={400}
+      disabled={disabled}
+      style={style}
+    >
       <Animated.View
-        style={[
-          style,
-          { transform: [{ scale }], opacity: disabled ? 0.5 : 1 },
-        ]}
+        style={{ transform: [{ scale }], opacity: disabled ? 0.5 : 1 }}
       >
         {children}
       </Animated.View>
-    </GestureDetector>
+    </Pressable>
   );
 }

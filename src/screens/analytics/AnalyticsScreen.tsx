@@ -13,7 +13,6 @@ import {
   StyleSheet,
   ScrollView,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   TrendingUp,
   TrendingDown,
@@ -77,7 +76,6 @@ const monthLabel = (key: string) => {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function AnalyticsScreen() {
-  const insets = useSafeAreaInsets();
   const [range, setRange] = useState<RangeKey>('MONTH');
 
   const months = range === 'YEAR' ? 12 : range === 'QUARTER' ? 3 : 1;
@@ -227,7 +225,7 @@ export function AnalyticsScreen() {
 
   if (loading) {
     return (
-      <View style={[styles.container, { paddingTop: insets.top }]}>
+      <View style={styles.container}>
         <ScreenHeader title="Analytics" />
         <View style={styles.content}>
           <SkeletonCard />
@@ -238,7 +236,7 @@ export function AnalyticsScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       <ScreenHeader title="Analytics" />
 
       <ScrollView
@@ -378,7 +376,7 @@ export function AnalyticsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   scroll: { flex: 1 },
-  content: { paddingHorizontal: SPACING.lg, paddingBottom: 120 },
+  content: { paddingHorizontal: SPACING.lg, paddingTop: SPACING.md, paddingBottom: 120 },
 
   statGrid: {
     flexDirection: 'row',

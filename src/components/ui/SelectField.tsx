@@ -17,6 +17,7 @@ import {
   Platform,
   KeyboardAvoidingView,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronDown, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -102,6 +103,7 @@ export function SelectField({
         onRequestClose={() => setOpen(false)}
         statusBarTranslucent
       >
+        <GestureHandlerRootView style={styles.gestureRoot}>
         <View style={styles.modalContainer}>
           <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
           <KeyboardAvoidingView
@@ -157,6 +159,7 @@ export function SelectField({
             </View>
           </KeyboardAvoidingView>
         </View>
+        </GestureHandlerRootView>
       </Modal>
     </View>
   );
@@ -208,6 +211,9 @@ const styles = StyleSheet.create({
   },
 
   // Sheet
+  gestureRoot: {
+    flex: 1,
+  },
   modalContainer: {
     flex: 1,
   },

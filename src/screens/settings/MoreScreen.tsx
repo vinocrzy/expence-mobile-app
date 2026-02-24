@@ -8,7 +8,6 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAuth as useClerkAuth, useUser } from '@clerk/clerk-expo';
@@ -36,9 +35,10 @@ import {
   BORDER_RADIUS,
   ICON_SIZE,
 } from '@/constants';
-import type { RootStackParamList } from '@/navigation/types';
+import type { MoreStackParamList } from '@/navigation/types';
+import { ScreenHeader } from '@/components/ui';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = NativeStackNavigationProp<MoreStackParamList, 'MoreMenu'>;
 
 // ─── Menu data ───────────────────────────────────────────────────────────────
 
@@ -46,7 +46,7 @@ interface MenuItem {
   label: string;
   subtitle?: string;
   icon: React.ReactNode;
-  screen?: keyof RootStackParamList;
+  screen?: keyof MoreStackParamList;
   onPress?: () => void;
   destructive?: boolean;
 }
@@ -171,7 +171,6 @@ function buildSections(onSignOut: () => void, isGuest: boolean, onSignIn: () => 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function MoreScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NavigationProp>();
   const { signOut } = useClerkAuth();
   const { user: clerkUser } = useUser();
@@ -224,7 +223,9 @@ export function MoreScreen() {
     : (clerkUser?.emailAddresses?.[0]?.emailAddress ?? '');
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
+      <ScreenHeader title="Menu" showBack={false} />
+
       <ScrollView
         style={styles.scroll}
         showsVerticalScrollIndicator={false}
@@ -313,7 +314,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom: 100,
+    paddingTop: SPACING.md,
+    paddingBottom: 120,
   },
 
   // User header card
@@ -323,7 +325,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.surface,
     borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.lg,
-    marginTop: SPACING.lg,
     marginBottom: SPACING.md,
     borderWidth: 1,
     borderColor: COLORS.border,

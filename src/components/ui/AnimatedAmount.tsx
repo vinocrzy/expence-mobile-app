@@ -79,7 +79,7 @@ export function AnimatedAmount({
       setDisplay(formatAmount(start + diff * eased, currency, fractionDigits));
     }, 16);
     return () => clearInterval(interval);
-  }, [value, currency, fractionDigits, animVal, updateDisplay]);
+  }, [value, currency, fractionDigits, updateDisplay]);
 
   return (
     <Text style={[styles.text, style]}>

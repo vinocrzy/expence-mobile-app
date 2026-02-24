@@ -49,6 +49,14 @@ jest.mock('@/lib/localdb-services', () => ({
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe('useAccounts', () => {
+  // Re-establish mock implementations before each test.
+  // jest's clearMocks:true clears mock state; explicitly restoring
+  // mockResolvedValue guards against jest 30 clearing implementations.
+  beforeEach(() => {
+    const { accountService } = require('@/lib/localdb-services');
+    (accountService.getAll as jest.Mock).mockResolvedValue(mockAccounts);
+  });
+
   it('starts with loading=true and an empty accounts array', () => {
     const { result } = renderHook(() => useAccounts());
     expect(result.current.loading).toBe(true);
@@ -60,9 +68,9 @@ describe('useAccounts', () => {
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
+      expect(result.current.accounts).toHaveLength(2);
     });
 
-    expect(result.current.accounts).toHaveLength(2);
     expect(result.current.accounts[0].name).toBe('HDFC Savings');
   });
 

@@ -13,7 +13,6 @@ import {
   ScrollView,
   RefreshControl,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -60,7 +59,6 @@ const fmt = (n: number) =>
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function FinancesScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const { accounts, loading: accLoading, addAccount } = useAccounts();
   const { creditCards, loading: ccLoading, addCreditCard } = useCreditCards();
@@ -107,21 +105,22 @@ export function FinancesScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={COLORS.primaryLight}
-          colors={[COLORS.primaryLight]}
-        />
-      }
-    >
-      {/* Header */}
-      <ScreenHeader title="My Finances" showBack={false} large transparent />
+    <View style={styles.container}>
+      <ScreenHeader title="My Finances" showBack={false} />
+
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primaryLight}
+            colors={[COLORS.primaryLight]}
+          />
+        }
+      >
 
       {/* Hero Balance */}
       {loading ? (
@@ -296,7 +295,8 @@ export function FinancesScreen() {
       )}
 
       {/* Bottom spacer */}
-      <View style={{ height: 100 }} />
+      <View style={{ height: 120 }} />
+      </ScrollView>
 
       {/* Add Account Modal */}
       <AccountModal
@@ -325,7 +325,7 @@ export function FinancesScreen() {
         }}
         accounts={bankAccounts}
       />
-    </ScrollView>
+    </View>
   );
 }
 
@@ -336,8 +336,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
   },
   twoCol: {
     flexDirection: 'row',

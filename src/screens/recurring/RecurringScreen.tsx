@@ -336,6 +336,7 @@ const styles = StyleSheet.create({
   list: {
     padding: SPACING.lg,
     gap: SPACING.md,
+    paddingBottom: 120,
   },
   card: {
     flexDirection: 'row',

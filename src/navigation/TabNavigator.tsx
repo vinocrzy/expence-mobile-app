@@ -29,8 +29,7 @@ import { useTransactions } from '@/hooks/useLocalData';
 import { DashboardScreen } from '@/screens/dashboard/DashboardScreen';
 import { TransactionsScreen } from '@/screens/transactions/TransactionsScreen';
 import { FinancesScreen } from '@/screens/finances/FinancesScreen';
-import { BudgetsScreen } from '@/screens/budgets/BudgetsScreen';
-import { MoreScreen } from '@/screens/settings/MoreScreen';
+import { MoreStackNavigator } from './MoreStackNavigator';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 
@@ -51,15 +50,17 @@ export function TabNavigator() {
   };
 
   const handleQuickAction = useCallback((action: QuickAction) => {
-    // Map quick action to transaction type
-    const typeMap: Record<string, TransactionType> = {
-      expense: 'EXPENSE',
-      income: 'INCOME',
-      transfer: 'TRANSFER',
-      investment: 'INVESTMENT',
-      debt: 'DEBT',
+    // Map quick action to transaction type (keys must match QuickAction uppercase values)
+    const typeMap: Partial<Record<QuickAction, TransactionType>> = {
+      EXPENSE: 'EXPENSE',
+      INCOME: 'INCOME',
+      TRANSFER: 'TRANSFER',
+      PAY_EMI: 'DEBT',
+      PAY_CARD: 'EXPENSE',
+      SUBSCRIBE: 'EXPENSE',
     };
-    setTxInitialType(typeMap[action] || 'EXPENSE');
+    
+    setTxInitialType(typeMap[action] ?? 'EXPENSE');
     setTxModalOpen(true);
   }, []);
 
@@ -154,7 +155,7 @@ export function TabNavigator() {
       />
       <Tab.Screen
         name="More"
-        component={MoreScreen}
+        component={MoreStackNavigator}
         options={{
           tabBarIcon: ({ color, size }) => <Menu size={size - 2} color={color} />,
         }}

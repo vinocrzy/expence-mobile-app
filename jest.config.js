@@ -3,6 +3,7 @@ module.exports = {
   preset: 'jest-expo',
   setupFiles: ['./jest.setup.ts'],
   clearMocks: true,
+  forceExit: true,
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },

@@ -21,6 +21,7 @@ import {
   type ViewStyle,
   type StyleProp,
 } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X } from 'lucide-react-native';
 import { COLORS, FONT_SIZE, SPACING, ICON_SIZE, HIT_SLOP } from '@/constants';
@@ -74,6 +75,7 @@ export function BottomSheetModal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
+      <GestureHandlerRootView style={styles.gestureRoot}>
       <View style={styles.container}>
         <Pressable style={styles.backdrop} onPress={onClose} />
         <KeyboardAvoidingView
@@ -136,11 +138,15 @@ export function BottomSheetModal({
           </View>
         </KeyboardAvoidingView>
       </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  gestureRoot: {
+    flex: 1,
+  },
   container: {
     flex: 1,
   },

@@ -14,7 +14,6 @@ import {
   RefreshControl,
   Pressable,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -26,7 +25,7 @@ import {
 } from 'lucide-react-native';
 
 import { COLORS, FONT_SIZE, SPACING, ICON_SIZE, BORDER_RADIUS } from '@/constants';
-import type { RootStackParamList } from '@/navigation/types';
+import type { MoreStackParamList } from '@/navigation/types';
 import type { Transaction, Budget } from '@/types/db-types';
 import { useBudgets, useTransactions } from '@/hooks/useLocalData';
 import { BudgetCreateModal } from '@/components/BudgetCreateModal';
@@ -40,7 +39,7 @@ import {
   IconCircle,
 } from '@/components/ui';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = NativeStackNavigationProp<MoreStackParamList>;
 
 const fmt = (n: number) =>
   `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
@@ -77,7 +76,6 @@ function calculateSpent(budget: Budget, transactions: Transaction[]): number {
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function BudgetsScreen() {
-  const insets = useSafeAreaInsets();
   const navigation = useNavigation<Nav>();
   const { budgets, loading: budgetsLoading, refresh: refreshBudgets, addBudget } = useBudgets();
   const { transactions, loading: txLoading } = useTransactions();
@@ -105,25 +103,10 @@ export function BudgetsScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={COLORS.primaryLight}
-          colors={[COLORS.primaryLight]}
-        />
-      }
-    >
+    <View style={styles.container}>
       <ScreenHeader
         title="Budgets"
         subtitle="Spending limits & goals"
-        showBack={false}
-        large
-        transparent
         rightAction={
           <Pressable onPress={() => setShowCreateModal(true)} hitSlop={8}>
             <Plus size={24} color={COLORS.primaryLight} />
@@ -131,6 +114,19 @@ export function BudgetsScreen() {
         }
       />
 
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={COLORS.primaryLight}
+            colors={[COLORS.primaryLight]}
+          />
+        }
+      >
       {/* Loading */}
       {loading ? (
         <>
@@ -228,7 +224,8 @@ export function BudgetsScreen() {
       )}
 
       {/* Bottom spacer */}
-      <View style={{ height: 100 }} />
+      <View style={{ height: 120 }} />
+      </ScrollView>
 
       {/* Create Budget Modal */}
       <BudgetCreateModal
@@ -238,7 +235,7 @@ export function BudgetsScreen() {
           await addBudget(data);
         }}
       />
-    </ScrollView>
+    </View>
   );
 }
 
@@ -249,8 +246,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.background,
   },
+  scroll: {
+    flex: 1,
+  },
   content: {
     paddingHorizontal: SPACING.lg,
+    paddingTop: SPACING.md,
   },
   cardHeader: {
     flexDirection: 'row',

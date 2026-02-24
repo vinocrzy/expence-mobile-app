@@ -21,7 +21,7 @@ import { Copy, LayoutDashboard, Upload, UserPlus, Crown, Users as UsersIcon } fr
 import * as Clipboard from 'expo-clipboard';
 
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, ICON_SIZE } from '@/constants';
-import type { RootStackParamList } from '@/navigation/types';
+import type { MoreStackParamList } from '@/navigation/types';
 import type { Household } from '@/types/db-types';
 import { useAuth } from '@/context/AuthContext';
 import { householdService, sharedDataService, getHouseholdId } from '@/lib/localdb-services';
@@ -37,7 +37,7 @@ import {
   EmptyState,
 } from '@/components/ui';
 
-type Nav = NativeStackNavigationProp<RootStackParamList>;
+type Nav = NativeStackNavigationProp<MoreStackParamList>;
 
 export function HouseholdScreen() {
   const navigation = useNavigation<Nav>();

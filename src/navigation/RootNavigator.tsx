@@ -17,21 +17,10 @@ import type { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
 import { AuthNavigator } from './AuthNavigator';
 
-// ─── Detail / Modal screens ─────────────────────────────────────────────────
-import { AnalyticsScreen } from '@/screens/analytics/AnalyticsScreen';
-import { SettingsScreen } from '@/screens/settings/SettingsScreen';
-import { SettingsCategoriesScreen } from '@/screens/settings/SettingsCategoriesScreen';
-import { ProfileScreen } from '@/screens/profile/ProfileScreen';
-import { ReportsScreen } from '@/screens/reports/ReportsScreen';
-import { RecurringScreen } from '@/screens/recurring/RecurringScreen';
-import { HouseholdScreen } from '@/screens/household/HouseholdScreen';
-import { SharedDashboardScreen } from '@/screens/household/SharedDashboardScreen';
+// ─── Detail screens (no tab bar — navigated deep from Finances / Dashboard) ──
 import { AccountDetailScreen } from '@/screens/accounts/AccountDetailScreen';
 import { CreditCardDetailScreen } from '@/screens/credit-cards/CreditCardDetailScreen';
 import { LoanDetailScreen } from '@/screens/loans/LoanDetailScreen';
-import { BudgetDetailScreen } from '@/screens/budgets/BudgetDetailScreen';
-import { BudgetPlanScreen } from '@/screens/budgets/BudgetPlanScreen';
-import { BudgetsScreen } from '@/screens/budgets/BudgetsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -65,30 +54,13 @@ export function RootNavigator() {
         animation: 'slide_from_right',
       }}
     >
-      {/* Main Tabs */}
+      {/* Main Tabs (tab bar lives here) */}
       <Stack.Screen name="MainTabs" component={TabNavigator} />
 
-      {/* Insights & Reports */}
-      <Stack.Screen name="Analytics" component={AnalyticsScreen} />
-      <Stack.Screen name="Reports" component={ReportsScreen} />
-      <Stack.Screen name="Recurring" component={RecurringScreen} />
-
-      {/* Detail screens (push from lists) */}
-      <Stack.Screen name="Budgets" component={BudgetsScreen} />
+      {/* Detail screens — navigated from Dashboard / Finances tabs (tab bar hidden) */}
       <Stack.Screen name="AccountDetail" component={AccountDetailScreen} />
       <Stack.Screen name="CreditCardDetail" component={CreditCardDetailScreen} />
       <Stack.Screen name="LoanDetail" component={LoanDetailScreen} />
-      <Stack.Screen name="BudgetDetail" component={BudgetDetailScreen} />
-      <Stack.Screen name="BudgetPlan" component={BudgetPlanScreen} />
-
-      {/* Household */}
-      <Stack.Screen name="Household" component={HouseholdScreen} />
-      <Stack.Screen name="SharedDashboard" component={SharedDashboardScreen} />
-
-      {/* Settings & Profile */}
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="SettingsCategories" component={SettingsCategoriesScreen} />
-      <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>
   );
 }

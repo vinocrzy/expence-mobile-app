@@ -24,7 +24,7 @@ import {
 } from 'lucide-react-native';
 
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, ICON_SIZE } from '@/constants';
-import type { RootStackParamList } from '@/navigation/types';
+import type { RootStackParamList, MoreStackParamList } from '@/navigation/types';
 import type { Transaction, Budget, Category } from '@/types/db-types';
 import {
   budgetService,
@@ -44,7 +44,7 @@ import {
   Badge,
 } from '@/components/ui';
 
-type Props = NativeStackScreenProps<RootStackParamList, 'BudgetDetail'>;
+type Props = NativeStackScreenProps<MoreStackParamList, 'BudgetDetail'>;
 
 const fmt = (n: number) =>
   `₹${Math.abs(n).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;

@@ -15,7 +15,6 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { Search, SlidersHorizontal } from 'lucide-react-native';
 
@@ -73,7 +72,6 @@ function groupByDate(
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export function TransactionsScreen() {
-  const insets = useSafeAreaInsets();
   const { transactions, loading, deleteTransaction, refresh } = useTransactions();
   const { accounts } = useAccounts();
   const { creditCards } = useCreditCards();
@@ -150,7 +148,7 @@ export function TransactionsScreen() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
       {/* Header */}
       <ScreenHeader title="Transactions" showBack={false} />
 
@@ -259,6 +257,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: SPACING.lg,
+    paddingBottom: 120,
   },
   sectionTitle: {
     fontSize: FONT_SIZE.xs,

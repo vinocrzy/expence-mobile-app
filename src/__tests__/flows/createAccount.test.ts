@@ -111,12 +111,11 @@ describe('Create Account — startup race condition', () => {
   const HH_RACE = 'flow-hh-race-test';
 
   it('still creates account correctly when service reads from AsyncStorage', async () => {
-    // Persist the householdId to storage (as setHouseholdId does)
+    // Wipe the in-memory value first (simulating module reload / startup race),
+    // then persist the householdId to storage as a previous session would have.
+    setHouseholdId(null as any);
     await AsyncStorage.setItem(HOUSEHOLD_STORAGE_KEY, HH_RACE);
     setCurrentUser({ id: 'user-race', name: 'Race User' });
-
-    // Wipe the in-memory value to simulate the startup race
-    setHouseholdId(null as any);
 
     // getHouseholdId() should recover from AsyncStorage
     const resolved = await getHouseholdId();
