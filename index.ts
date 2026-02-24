@@ -1,3 +1,10 @@
+// Polyfill: Buffer + process globals must be set before any PouchDB code loads
+import { Buffer } from 'buffer';
+(globalThis as any).Buffer = Buffer;
+
+import process from 'process';
+(globalThis as any).process = process;
+
 // Polyfill: must be imported before anything that touches crypto
 import 'react-native-get-random-values';
 
