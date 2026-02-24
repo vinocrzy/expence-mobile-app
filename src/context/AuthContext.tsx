@@ -15,6 +15,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { v4 as uuidv4 } from 'uuid';
 import { setHouseholdId, setCurrentUser } from '@/lib/localdb-services';
 
+const safeUuid = (): string => {
+  try {
+    return uuidv4();
+  } catch {
+    return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+};
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export interface User {
@@ -76,7 +84,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Check guest mode first
         const guestFlag = await AsyncStorage.getItem(GUEST_MODE_KEY);
         if (guestFlag === 'true') {
-          const guestId = await AsyncStorage.getItem(GUEST_ID_KEY) || `guest_${uuidv4()}`;
+          const guestId = await AsyncStorage.getItem(GUEST_ID_KEY) || `guest_${safeUuid()}`;
           const guestUser: User = {
             id: guestId,
             email: '',
@@ -170,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const enterGuestMode = useCallback(async () => {
     try {
-      const guestId = `guest_${uuidv4()}`;
+      const guestId = `guest_${safeUuid()}`;
       await AsyncStorage.setItem(GUEST_MODE_KEY, 'true');
       await AsyncStorage.setItem(GUEST_ID_KEY, guestId);
 

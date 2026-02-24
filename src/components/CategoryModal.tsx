@@ -43,6 +43,14 @@ const COLOR_PALETTE = [
   '#f43f5e', '#78716c', '#64748b', '#6b7280',
 ];
 
+const safeId = (): string => {
+  try {
+    return uuid();
+  } catch {
+    return `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+};
+
 // ─── Props ───────────────────────────────────────────────────────────────────
 
 interface CategoryModalProps {
@@ -90,7 +98,7 @@ export function CategoryModal({
 
   const addSubCategory = () => {
     if (!newSubName.trim()) return;
-    setSubCategories([...subCategories, { id: uuid(), name: newSubName.trim() }]);
+    setSubCategories([...subCategories, { id: safeId(), name: newSubName.trim() }]);
     setNewSubName('');
   };
 

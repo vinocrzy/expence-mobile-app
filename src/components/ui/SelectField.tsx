@@ -100,54 +100,63 @@ export function SelectField({
         transparent
         animationType="slide"
         onRequestClose={() => setOpen(false)}
+        statusBarTranslucent
       >
-        <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.sheetWrap}
-        >
-          <View style={[styles.sheet, { paddingBottom: insets.bottom + SPACING.lg }]}>
-            {/* Handle */}
-            <View style={styles.handleRow}>
-              <View style={styles.handle} />
+        <View style={styles.modalContainer}>
+          <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.sheetWrap}
+          >
+            <View style={[styles.sheet, { paddingBottom: insets.bottom + SPACING.lg }]}>
+              {/* Handle */}
+              <View style={styles.handleRow}>
+                <View style={styles.handle} />
+              </View>
+
+              <Text style={styles.sheetTitle}>{label ?? 'Select'}</Text>
+
+              <FlatList
+                data={options}
+                keyExtractor={(item) => item.value}
+                style={styles.list}
+                showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
+                ListEmptyComponent={
+                  <View style={styles.emptyWrap}>
+                    <Text style={styles.emptyText}>No options available</Text>
+                  </View>
+                }
+                renderItem={({ item }) => {
+                  const isSelected = item.value === value;
+                  return (
+                    <TouchableOpacity
+                      style={[styles.option, isSelected && styles.optionActive]}
+                      onPress={() => handleSelect(item.value)}
+                      activeOpacity={0.6}
+                    >
+                      <View style={styles.optionLeft}>
+                        {item.icon}
+                        <Text
+                          style={[
+                            styles.optionText,
+                            item.icon ? { marginLeft: SPACING.md } : undefined,
+                            isSelected && styles.optionTextActive,
+                          ]}
+                        >
+                          {item.label}
+                        </Text>
+                      </View>
+                      {isSelected && (
+                        <Check size={ICON_SIZE.md} color={COLORS.primaryLight} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
             </View>
-
-            <Text style={styles.sheetTitle}>{label ?? 'Select'}</Text>
-
-            <FlatList
-              data={options}
-              keyExtractor={(item) => item.value}
-              style={styles.list}
-              showsVerticalScrollIndicator={false}
-              renderItem={({ item }) => {
-                const isSelected = item.value === value;
-                return (
-                  <TouchableOpacity
-                    style={[styles.option, isSelected && styles.optionActive]}
-                    onPress={() => handleSelect(item.value)}
-                    activeOpacity={0.6}
-                  >
-                    <View style={styles.optionLeft}>
-                      {item.icon}
-                      <Text
-                        style={[
-                          styles.optionText,
-                          item.icon ? { marginLeft: SPACING.md } : undefined,
-                          isSelected && styles.optionTextActive,
-                        ]}
-                      >
-                        {item.label}
-                      </Text>
-                    </View>
-                    {isSelected && (
-                      <Check size={ICON_SIZE.md} color={COLORS.primaryLight} />
-                    )}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          </View>
-        </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );
@@ -199,14 +208,19 @@ const styles = StyleSheet.create({
   },
 
   // Sheet
-  backdrop: {
+  modalContainer: {
     flex: 1,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheetWrap: {
+    flex: 1,
     justifyContent: 'flex-end',
   },
   sheet: {
+    width: '100%',
     backgroundColor: '#0a0a0a', // gray-950
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
@@ -214,6 +228,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.borderLight,
     paddingHorizontal: SPACING['2xl'],
     maxHeight: '60%',
+    minHeight: 220,
   },
   handleRow: {
     alignItems: 'center',
@@ -233,7 +248,16 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   list: {
-    flex: 1,
+    flexGrow: 0,
+    minHeight: 140,
+  },
+  emptyWrap: {
+    paddingVertical: SPACING.lg,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textTertiary,
   },
   option: {
     flexDirection: 'row',

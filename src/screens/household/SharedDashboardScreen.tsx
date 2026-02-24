@@ -14,7 +14,7 @@ import {
   FlatList,
   ScrollView,
 } from 'react-native';
-import { Wifi } from 'lucide-react-native';
+import { Inbox, Wifi } from 'lucide-react-native';
 
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, ICON_SIZE } from '@/constants';
 import type { SharedTransaction, SharedAccountBalance } from '@/types/db-types';
@@ -173,7 +173,7 @@ export function SharedDashboardScreen() {
 
         {filtered.length === 0 ? (
           <EmptyState
-            icon="inbox"
+            icon={<Inbox size={32} color={COLORS.textTertiary} />}
             title="No Transactions"
             description="No shared data yet. Ask the owner to publish a snapshot."
           />

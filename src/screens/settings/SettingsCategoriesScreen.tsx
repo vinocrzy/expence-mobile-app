@@ -14,7 +14,7 @@ import {
   SectionList,
   Alert,
 } from 'react-native';
-import { Plus, ChevronRight } from 'lucide-react-native';
+import { Plus, ChevronRight, Tag } from 'lucide-react-native';
 
 import { COLORS, FONT_SIZE, SPACING, BORDER_RADIUS, ICON_SIZE } from '@/constants';
 import type { Category } from '@/types/db-types';
@@ -159,7 +159,7 @@ export function SettingsCategoriesScreen() {
         </View>
       ) : sections.length === 0 ? (
         <EmptyState
-          icon="tag"
+          icon={<Tag size={32} color={COLORS.textTertiary} />}
           title="No Categories"
           description="Tap + to create your first category."
         />

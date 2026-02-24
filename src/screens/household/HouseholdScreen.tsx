@@ -132,7 +132,7 @@ export function HouseholdScreen() {
         {!loading && !household && (
           <View style={{ marginTop: SPACING['3xl'] }}>
             <EmptyState
-              icon="users"
+              icon={<UsersIcon size={32} color={COLORS.textTertiary} />}
               title="No Household"
               description="Create a household to share budgets and track expenses with family."
             />

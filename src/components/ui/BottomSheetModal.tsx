@@ -37,6 +37,22 @@ interface BottomSheetModalProps {
   style?: StyleProp<ViewStyle>;
 }
 
+function normalizeNode(node: React.ReactNode): React.ReactNode {
+  if (node == null || typeof node === 'boolean') {
+    return null;
+  }
+
+  if (typeof node === 'string' || typeof node === 'number') {
+    return <Text style={styles.inlineText}>{String(node)}</Text>;
+  }
+
+  if (Array.isArray(node)) {
+    return node.map((child, index) => <React.Fragment key={index}>{normalizeNode(child)}</React.Fragment>);
+  }
+
+  return node;
+}
+
 export function BottomSheetModal({
   visible,
   onClose,
@@ -47,6 +63,8 @@ export function BottomSheetModal({
   style,
 }: BottomSheetModalProps) {
   const insets = useSafeAreaInsets();
+  const footerBottomPadding = Math.max(insets.bottom, SPACING.lg) + SPACING.md;
+  const sheetBottomSpacer = Math.max(insets.bottom, SPACING.lg);
 
   return (
     <Modal
@@ -56,18 +74,19 @@ export function BottomSheetModal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.wrap}
-      >
-        <View
-          style={[
-            styles.sheet,
-            { maxHeight: `${Math.round(maxHeightRatio * 100)}%` as any },
-            style,
-          ]}
+      <View style={styles.container}>
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.wrap}
         >
+          <View
+            style={[
+              styles.sheet,
+              { maxHeight: `${Math.round(maxHeightRatio * 100)}%` as any },
+              style,
+            ]}
+          >
           {/* ── Handle ── */}
           <View style={styles.handleRow}>
             <View style={styles.handle} />
@@ -92,9 +111,12 @@ export function BottomSheetModal({
             style={styles.body}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.bodyContent}
+            contentContainerStyle={[
+              styles.bodyContent,
+              footer ? styles.bodyContentWithFooter : null,
+            ]}
           >
-            {children}
+            {normalizeNode(children)}
           </ScrollView>
 
           {/* ── Footer ── */}
@@ -102,30 +124,36 @@ export function BottomSheetModal({
             <View
               style={[
                 styles.footer,
-                { paddingBottom: insets.bottom + SPACING.lg },
+                { paddingBottom: footerBottomPadding },
               ]}
             >
-              {footer}
+              <View style={styles.footerContent}>{normalizeNode(footer)}</View>
             </View>
           )}
 
-          {/* Safe-area padding when no footer */}
-          {!footer && <View style={{ height: insets.bottom + SPACING.lg }} />}
-        </View>
-      </KeyboardAvoidingView>
+            {/* Safe-area padding when no footer */}
+            {!footer && <View style={{ height: sheetBottomSpacer }} />}
+          </View>
+        </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
+  container: {
     flex: 1,
+  },
+  backdrop: {
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   wrap: {
+    flex: 1,
     justifyContent: 'flex-end',
   },
   sheet: {
+    width: '100%',
     backgroundColor: '#0a0a0a', // gray-950
     borderTopLeftRadius: 40,
     borderTopRightRadius: 40,
@@ -158,13 +186,20 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: COLORS.textPrimary,
   },
+  inlineText: {
+    color: COLORS.textPrimary,
+    fontSize: FONT_SIZE.base,
+  },
   body: {
-    flex: 1,
+    flexShrink: 1,
   },
   bodyContent: {
     paddingHorizontal: SPACING['2xl'],
     paddingTop: SPACING.lg,
     paddingBottom: SPACING.md,
+  },
+  bodyContentWithFooter: {
+    paddingBottom: SPACING.lg,
   },
   footer: {
     flexDirection: 'row',
@@ -174,5 +209,8 @@ const styles = StyleSheet.create({
     paddingTop: SPACING.md,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(55,65,81,0.5)',
+  },
+  footerContent: {
+    width: '100%',
   },
 });

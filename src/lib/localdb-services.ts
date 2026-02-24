@@ -35,7 +35,15 @@ import type {
 // HELPERS
 // ============================================
 
-const generateId = () => uuidv4();
+const generateId = (): string => {
+  try {
+    return uuidv4();
+  } catch {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).slice(2, 10);
+    return `id_${timestamp}_${random}`;
+  }
+};
 
 const safeGet = async <T>(db: PouchDB.Database, id: string): Promise<T | undefined> => {
   try {
@@ -626,7 +634,7 @@ export const creditCardService = {
     dueDate.setDate(dueDate.getDate() + 20);
 
     const newStatement: any = {
-      id: uuidv4(),
+      id: generateId(),
       statementDate: new Date().toISOString(),
       cycleStart: cycleStartDetails.toISOString(),
       cycleEnd: cycleEndDetails.toISOString(),
@@ -1027,7 +1035,7 @@ export const householdService = {
       id: householdId,
       name,
       ownerId: owner.id,
-      inviteCode: 'INV-' + uuidv4().substring(0, 8).toUpperCase(),
+      inviteCode: 'INV-' + generateId().replace(/[^A-Za-z0-9]/g, '').substring(0, 8).toUpperCase(),
       members: [
         {
           userId: owner.id,
