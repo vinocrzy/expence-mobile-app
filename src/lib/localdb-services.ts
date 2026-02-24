@@ -18,6 +18,7 @@ import {
   initDB,
 } from './pouchdb';
 import { v4 as uuidv4 } from 'uuid';
+import { logger } from './logger';
 import type {
   Account,
   Category,
@@ -307,14 +308,14 @@ export const transactionService = {
               updatedAt: now,
             });
           } catch (ccErr) {
-            console.error('Account/Card not found for transaction', ccErr);
+            logger.warn('transactionService', 'Account/Card not found for transaction', ccErr);
           }
         } else {
           throw err;
         }
       }
     } catch (err: any) {
-      console.error('Failed to update balance', err);
+      logger.captureError('transactionService', 'Failed to update balance', err);
     }
 
     // Handle Transfer Destination Account
@@ -329,7 +330,7 @@ export const transactionService = {
           updatedAt: now,
         });
       } catch (err: any) {
-        console.error('Failed to update transfer account balance', err);
+        logger.captureError('transactionService', 'Failed to update transfer account balance', err);
       }
     }
 
@@ -1006,6 +1007,7 @@ export const setCurrentUser = (user: { id: string; name: string; color?: string 
 export const getHouseholdId = async (): Promise<string> => {
   if (!currentHouseholdId) {
     console.warn('[Services] getHouseholdId called but no householdId set. Using fallback.');
+    logger.warn('Services', 'getHouseholdId called but no householdId set. Using fallback.');
     return 'household_1';
   }
   return currentHouseholdId;

@@ -14,6 +14,7 @@ import {
   resetReplicationState,
 } from '@/lib/replication';
 import { useAuth } from '@/context/AuthContext';
+import { logger } from '@/lib/logger';
 
 interface LocalFirstContextType {
   /** true once PouchDB indexes are created */
@@ -38,10 +39,10 @@ export function LocalFirstProvider({ children }: { children: ReactNode }) {
         .then(() => {
           dbReady.current = true;
           setReady(true);
-          console.log('[LocalFirst] DB indexes ready');
+          logger.info('LocalFirst', 'DB indexes ready');
         })
         .catch((err) => {
-          console.error('[LocalFirst] DB init failed:', err);
+          logger.captureError('LocalFirst', 'DB init failed', err);
           // Still mark ready so app isn't stuck
           setReady(true);
         });
@@ -58,7 +59,7 @@ export function LocalFirstProvider({ children }: { children: ReactNode }) {
     const householdId = user.householdId || user.id;
 
     initializeReplication(getToken, householdId).catch((err) => {
-      console.error('[LocalFirst] Replication init failed:', err);
+      logger.captureError('LocalFirst', 'Replication init failed', err);
     });
 
     return () => {

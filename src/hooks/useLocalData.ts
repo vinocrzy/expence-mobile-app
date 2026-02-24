@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { logger } from '@/lib/logger';
 import {
   transactionService,
   accountService,
@@ -58,7 +59,7 @@ export function useTransactions() {
       const data = await transactionService.getAll(householdId);
       setTransactions(data);
     } catch (error) {
-      console.error('Failed to load transactions:', error);
+      logger.captureError('useTransactions', 'loadTransactions', error);
     } finally {
       setLoading(false);
     }
@@ -71,24 +72,36 @@ export function useTransactions() {
 
   const addTransaction = useCallback(
     async (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
-      const transaction = await transactionService.create(data);
-      events.emit(EVENTS.TRANSACTIONS_CHANGED);
-      events.emit(EVENTS.ACCOUNTS_CHANGED);
-      return transaction;
+      try {
+        const transaction = await transactionService.create(data);
+        events.emit(EVENTS.TRANSACTIONS_CHANGED);
+        events.emit(EVENTS.ACCOUNTS_CHANGED);
+        return transaction;
+      } catch (err) {
+        throw logger.captureError('useTransactions', 'addTransaction', err);
+      }
     },
     [],
   );
 
   const updateTransaction = useCallback(async (id: string, data: Partial<Transaction>) => {
-    await transactionService.update(id, data);
-    events.emit(EVENTS.TRANSACTIONS_CHANGED);
-    events.emit(EVENTS.ACCOUNTS_CHANGED);
+    try {
+      await transactionService.update(id, data);
+      events.emit(EVENTS.TRANSACTIONS_CHANGED);
+      events.emit(EVENTS.ACCOUNTS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useTransactions', 'updateTransaction', err);
+    }
   }, []);
 
   const deleteTransaction = useCallback(async (id: string) => {
-    await transactionService.delete(id);
-    events.emit(EVENTS.TRANSACTIONS_CHANGED);
-    events.emit(EVENTS.ACCOUNTS_CHANGED);
+    try {
+      await transactionService.delete(id);
+      events.emit(EVENTS.TRANSACTIONS_CHANGED);
+      events.emit(EVENTS.ACCOUNTS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useTransactions', 'deleteTransaction', err);
+    }
   }, []);
 
   return {
@@ -115,7 +128,7 @@ export function useAccounts() {
       const data = await accountService.getAll(householdId);
       setAccounts(data);
     } catch (error) {
-      console.error('Failed to load accounts:', error);
+      logger.captureError('useAccounts', 'loadAccounts', error);
     } finally {
       setLoading(false);
     }
@@ -128,21 +141,33 @@ export function useAccounts() {
 
   const addAccount = useCallback(
     async (data: Omit<Account, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
-      const account = await accountService.create(data);
-      events.emit(EVENTS.ACCOUNTS_CHANGED);
-      return account;
+      try {
+        const account = await accountService.create(data);
+        events.emit(EVENTS.ACCOUNTS_CHANGED);
+        return account;
+      } catch (err) {
+        throw logger.captureError('useAccounts', 'addAccount', err);
+      }
     },
     [],
   );
 
   const updateAccount = useCallback(async (id: string, data: Partial<Account>) => {
-    await accountService.update(id, data);
-    events.emit(EVENTS.ACCOUNTS_CHANGED);
+    try {
+      await accountService.update(id, data);
+      events.emit(EVENTS.ACCOUNTS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useAccounts', 'updateAccount', err);
+    }
   }, []);
 
   const deleteAccount = useCallback(async (id: string) => {
-    await accountService.delete(id);
-    events.emit(EVENTS.ACCOUNTS_CHANGED);
+    try {
+      await accountService.delete(id);
+      events.emit(EVENTS.ACCOUNTS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useAccounts', 'deleteAccount', err);
+    }
   }, []);
 
   return {
@@ -169,7 +194,7 @@ export function useCategories() {
       const data = await categoryService.getAll(householdId);
       setCategories(data);
     } catch (error) {
-      console.error('Failed to load categories:', error);
+      logger.captureError('useCategories', 'loadCategories', error);
     } finally {
       setLoading(false);
     }
@@ -182,21 +207,33 @@ export function useCategories() {
 
   const addCategory = useCallback(
     async (data: Omit<Category, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
-      const category = await categoryService.create(data);
-      events.emit(EVENTS.CATEGORIES_CHANGED);
-      return category;
+      try {
+        const category = await categoryService.create(data);
+        events.emit(EVENTS.CATEGORIES_CHANGED);
+        return category;
+      } catch (err) {
+        throw logger.captureError('useCategories', 'addCategory', err);
+      }
     },
     [],
   );
 
   const updateCategory = useCallback(async (id: string, data: Partial<Category>) => {
-    await categoryService.update(id, data);
-    events.emit(EVENTS.CATEGORIES_CHANGED);
+    try {
+      await categoryService.update(id, data);
+      events.emit(EVENTS.CATEGORIES_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useCategories', 'updateCategory', err);
+    }
   }, []);
 
   const deleteCategory = useCallback(async (id: string) => {
-    await categoryService.delete(id);
-    events.emit(EVENTS.CATEGORIES_CHANGED);
+    try {
+      await categoryService.delete(id);
+      events.emit(EVENTS.CATEGORIES_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useCategories', 'deleteCategory', err);
+    }
   }, []);
 
   return {
@@ -223,7 +260,7 @@ export function useCreditCards() {
       const data = await creditCardService.getAll(householdId);
       setCreditCards(data);
     } catch (error) {
-      console.error('Failed to load credit cards:', error);
+      logger.captureError('useCreditCards', 'loadCreditCards', error);
     } finally {
       setLoading(false);
     }
@@ -236,21 +273,33 @@ export function useCreditCards() {
 
   const addCreditCard = useCallback(
     async (data: Omit<CreditCard, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
-      const creditCard = await creditCardService.create(data);
-      events.emit(EVENTS.CREDIT_CARDS_CHANGED);
-      return creditCard;
+      try {
+        const creditCard = await creditCardService.create(data);
+        events.emit(EVENTS.CREDIT_CARDS_CHANGED);
+        return creditCard;
+      } catch (err) {
+        throw logger.captureError('useCreditCards', 'addCreditCard', err);
+      }
     },
     [],
   );
 
   const updateCreditCard = useCallback(async (id: string, data: Partial<CreditCard>) => {
-    await creditCardService.update(id, data);
-    events.emit(EVENTS.CREDIT_CARDS_CHANGED);
+    try {
+      await creditCardService.update(id, data);
+      events.emit(EVENTS.CREDIT_CARDS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useCreditCards', 'updateCreditCard', err);
+    }
   }, []);
 
   const deleteCreditCard = useCallback(async (id: string) => {
-    await creditCardService.delete(id);
-    events.emit(EVENTS.CREDIT_CARDS_CHANGED);
+    try {
+      await creditCardService.delete(id);
+      events.emit(EVENTS.CREDIT_CARDS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useCreditCards', 'deleteCreditCard', err);
+    }
   }, []);
 
   return {
@@ -277,7 +326,7 @@ export function useLoans() {
       const data = await loanService.getAll(householdId);
       setLoans(data);
     } catch (error) {
-      console.error('Failed to load loans:', error);
+      logger.captureError('useLoans', 'loadLoans', error);
     } finally {
       setLoading(false);
     }
@@ -290,21 +339,33 @@ export function useLoans() {
 
   const addLoan = useCallback(
     async (data: Omit<Loan, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
-      const loan = await loanService.create(data);
-      events.emit(EVENTS.LOANS_CHANGED);
-      return loan;
+      try {
+        const loan = await loanService.create(data);
+        events.emit(EVENTS.LOANS_CHANGED);
+        return loan;
+      } catch (err) {
+        throw logger.captureError('useLoans', 'addLoan', err);
+      }
     },
     [],
   );
 
   const updateLoan = useCallback(async (id: string, data: Partial<Loan>) => {
-    await loanService.update(id, data);
-    events.emit(EVENTS.LOANS_CHANGED);
+    try {
+      await loanService.update(id, data);
+      events.emit(EVENTS.LOANS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useLoans', 'updateLoan', err);
+    }
   }, []);
 
   const deleteLoan = useCallback(async (id: string) => {
-    await loanService.delete(id);
-    events.emit(EVENTS.LOANS_CHANGED);
+    try {
+      await loanService.delete(id);
+      events.emit(EVENTS.LOANS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useLoans', 'deleteLoan', err);
+    }
   }, []);
 
   return {
@@ -331,7 +392,7 @@ export function useBudgets() {
       const data = await budgetService.getAll(householdId);
       setBudgets(data);
     } catch (error) {
-      console.error('Failed to load budgets:', error);
+      logger.captureError('useBudgets', 'loadBudgets', error);
     } finally {
       setLoading(false);
     }
@@ -344,21 +405,33 @@ export function useBudgets() {
 
   const addBudget = useCallback(
     async (data: Omit<Budget, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
-      const budget = await budgetService.create(data);
-      events.emit(EVENTS.BUDGETS_CHANGED);
-      return budget;
+      try {
+        const budget = await budgetService.create(data);
+        events.emit(EVENTS.BUDGETS_CHANGED);
+        return budget;
+      } catch (err) {
+        throw logger.captureError('useBudgets', 'addBudget', err);
+      }
     },
     [],
   );
 
   const updateBudget = useCallback(async (id: string, data: Partial<Budget>) => {
-    await budgetService.update(id, data);
-    events.emit(EVENTS.BUDGETS_CHANGED);
+    try {
+      await budgetService.update(id, data);
+      events.emit(EVENTS.BUDGETS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useBudgets', 'updateBudget', err);
+    }
   }, []);
 
   const deleteBudget = useCallback(async (id: string) => {
-    await budgetService.delete(id);
-    events.emit(EVENTS.BUDGETS_CHANGED);
+    try {
+      await budgetService.delete(id);
+      events.emit(EVENTS.BUDGETS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useBudgets', 'deleteBudget', err);
+    }
   }, []);
 
   return {
@@ -393,7 +466,7 @@ export function useAnalytics(months: number = 12) {
       const categories = await calculateCategoryBreakdown(householdId, startDate, endDate);
       setCategoryData(categories);
     } catch (error) {
-      console.error('Failed to load analytics:', error);
+      logger.captureError('useAnalytics', 'loadAnalytics', error);
     } finally {
       setLoading(false);
     }
@@ -427,7 +500,7 @@ export function useRecurring() {
       data.sort((a, b) => new Date(a.nextDueDate).getTime() - new Date(b.nextDueDate).getTime());
       setRecurring(data);
     } catch (error) {
-      console.error('Failed to load recurring:', error);
+      logger.captureError('useRecurring', 'loadRecurring', error);
     } finally {
       setLoading(false);
     }
@@ -440,28 +513,44 @@ export function useRecurring() {
 
   const addRecurring = useCallback(
     async (data: Omit<RecurringTransaction, 'id' | 'createdAt' | 'updatedAt' | 'householdId'>) => {
-      const item = await recurringService.create(data);
-      events.emit(EVENTS.RECURRING_CHANGED);
-      return item;
+      try {
+        const item = await recurringService.create(data);
+        events.emit(EVENTS.RECURRING_CHANGED);
+        return item;
+      } catch (err) {
+        throw logger.captureError('useRecurring', 'addRecurring', err);
+      }
     },
     [],
   );
 
   const updateRecurring = useCallback(async (id: string, data: Partial<RecurringTransaction>) => {
-    await recurringService.update(id, data);
-    events.emit(EVENTS.RECURRING_CHANGED);
+    try {
+      await recurringService.update(id, data);
+      events.emit(EVENTS.RECURRING_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useRecurring', 'updateRecurring', err);
+    }
   }, []);
 
   const deleteRecurring = useCallback(async (id: string) => {
-    await recurringService.delete(id);
-    events.emit(EVENTS.RECURRING_CHANGED);
+    try {
+      await recurringService.delete(id);
+      events.emit(EVENTS.RECURRING_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useRecurring', 'deleteRecurring', err);
+    }
   }, []);
 
   const processPayment = useCallback(async (id: string, accountId: string) => {
-    await recurringService.processPayment(id, accountId);
-    events.emit(EVENTS.RECURRING_CHANGED);
-    events.emit(EVENTS.TRANSACTIONS_CHANGED);
-    events.emit(EVENTS.ACCOUNTS_CHANGED);
+    try {
+      await recurringService.processPayment(id, accountId);
+      events.emit(EVENTS.RECURRING_CHANGED);
+      events.emit(EVENTS.TRANSACTIONS_CHANGED);
+      events.emit(EVENTS.ACCOUNTS_CHANGED);
+    } catch (err) {
+      throw logger.captureError('useRecurring', 'processPayment', err);
+    }
   }, []);
 
   return {
